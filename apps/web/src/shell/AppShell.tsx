@@ -10,6 +10,9 @@ import { TransportBar } from '../audio/TransportBar'
 import { useAudio } from '../audio/useAudio'
 import { useAutosave } from '../io/useAutosave'
 import { MixerPanel } from '../play/MixerPanel'
+import { useMidi } from '../midi/useMidi'
+import { useRecording } from '../midi/useRecording'
+import { MidiDeviceSelect } from '../midi/MidiDeviceSelect'
 
 const TABS = [
   { id: 'compose',    label: 'Compose' },
@@ -27,6 +30,10 @@ export function AppShell() {
   const timeSignature = useStore((s) => s.project.transport.timeSignature)
   const { play, stop, getSeconds } = useAudio()
 
+  const { handleMidiMessage } = useRecording()
+  const { devices, selectedDeviceId, selectDevice, isSupported, accessError } =
+    useMidi(handleMidiMessage)
+
   return (
     <div style={{ display: 'grid', gridTemplateRows: '48px 1fr 64px', height: '100%' }}>
       {/* 툴바 */}
@@ -34,12 +41,19 @@ export function AppShell() {
         <strong style={{ letterSpacing: '-0.02em' }}>Sculptone</strong>
         <Tabs items={TABS} active={activeMode} onChange={(id) => setMode(id as Mode)} />
         <FileMenu />
+        <MidiDeviceSelect
+          devices={devices}
+          selectedDeviceId={selectedDeviceId}
+          selectDevice={selectDevice}
+          isSupported={isSupported}
+          accessError={accessError}
+        />
         <span className="mono" style={{ marginLeft: 'auto', color: 'var(--text-mid)', fontSize: 13 }}>
           {tempo} BPM · {timeSignature.join('/')}
         </span>
       </div>
 
-      {/* 본문: 좌 패널 · 중앙 캔버스 · 우 인스펙터 */}
+      {/* 본문 */}
       <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 200px', minHeight: 0 }}>
         <div style={{ ...region, overflowY: 'auto' }}>
           {activeMode === 'compose' && <TracksPanel />}

@@ -58,7 +58,7 @@ export function useAudio() {
   }, [])
 
   const play = useCallback(() => {
-    const { project } = useStore.getState()
+    const { project, isRecording } = useStore.getState()
     syncInstruments(project)
 
     const gen = ++playGenRef.current
@@ -74,11 +74,17 @@ export function useAudio() {
         useStore.getState().setPlaying(false)
       },
       () => playGenRef.current === gen,
+      // 녹음 중이면 keepAlive: 빈 트랙이어도 transport를 유지해 Stop 전까지 녹음 가능
+      { keepAlive: isRecording },
     )
   }, [syncInstruments])
 
   const stop = useCallback(() => {
     playGenRef.current++
+    // transport.stop()이 위치를 0으로 리셋하기 전에 현재 위치를 스냅샷.
+    // 녹음 커밋 시 dangling 노트 마감 endSec 계산에 사용.
+    const stopped = engineRef.current?.getSeconds() ?? 0
+    useStore.getState().setRecordStopSec(stopped)
     engineRef.current?.stop()
   }, [])
   const getSeconds = useCallback(() => engineRef.current?.getSeconds() ?? 0, [])

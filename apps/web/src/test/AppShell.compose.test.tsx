@@ -6,6 +6,18 @@ import { AppShell } from '../shell/AppShell'
 vi.mock('../audio/useAudio', () => ({ useAudio: () => ({ play: vi.fn(), stop: vi.fn(), getSeconds: () => 0 }) }))
 const useAutosaveMock = vi.hoisted(() => vi.fn())
 vi.mock('../io/useAutosave', () => ({ useAutosave: useAutosaveMock }))
+vi.mock('../midi/useMidi', () => ({
+  useMidi: () => ({
+    devices: [],
+    selectedDeviceId: null,
+    selectDevice: () => {},
+    isSupported: true,
+    accessError: null,
+  }),
+}))
+vi.mock('../midi/useRecording', () => ({
+  useRecording: () => ({ handleMidiMessage: () => {} }),
+}))
 
 describe('AppShell compose mode', () => {
   beforeEach(() => { useStore.setState({ activeMode: 'compose' }) })

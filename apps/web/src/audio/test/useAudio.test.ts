@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useStore } from '../../state/store'
 
 // Tone 전체 모킹
+let mockSeconds = 0
 const mockTransport = {
   bpm: { value: 120 },
   start: vi.fn(),
@@ -10,7 +11,7 @@ const mockTransport = {
   cancel: vi.fn(),
   schedule: vi.fn(),
   scheduleOnce: vi.fn(),
-  get seconds() { return 0 },
+  get seconds() { return mockSeconds },
 }
 vi.mock('tone', () => ({
   start: vi.fn().mockResolvedValue(undefined),
@@ -38,6 +39,7 @@ import { createTrack, addTrack, updateTrackSound } from '@sculptone/score-model'
 describe('useAudio — 멀티트랙 instrument 관리', () => {
   beforeEach(() => {
     useStore.setState(useStore.getInitialState(), true)
+    mockSeconds = 0
     vi.clearAllMocks()
     mockTransport.start.mockClear()
     mockTransport.stop.mockClear()
@@ -106,5 +108,29 @@ describe('useAudio — 멀티트랙 instrument 관리', () => {
   it('getSeconds()는 엔진이 없으면 0을 반환한다', () => {
     const { result } = renderHook(() => useAudio())
     expect(result.current.getSeconds()).toBe(0)
+  })
+
+  it('녹음 중이 아니면 노트 없는 프로젝트 play 시 transport.start를 호출하지 않는다', async () => {
+    // 기본 프로젝트: Piano 트랙, 노트 0개 → endSec 0, 비-keepAlive
+    const { result } = renderHook(() => useAudio())
+    await act(async () => { result.current.play() })
+    expect(mockTransport.start).not.toHaveBeenCalled()
+  })
+
+  it('녹음 중이면 노트 없는 트랙이어도 keepAlive로 transport.start를 호출한다', async () => {
+    const { result } = renderHook(() => useAudio())
+    act(() => { useStore.getState().setRecording(true) })
+    await act(async () => { result.current.play() })
+    expect(mockTransport.start).toHaveBeenCalledTimes(1)
+  })
+
+  it('stop()은 transport.stop 호출 직전 위치를 recordStopSec로 스냅샷한다', async () => {
+    const { result } = renderHook(() => useAudio())
+    act(() => { useStore.getState().setRecording(true) })
+    await act(async () => { result.current.play() })
+    // 재생 진행: transport가 1.7s 위치
+    mockSeconds = 1.7
+    act(() => { result.current.stop() })
+    expect(useStore.getState().recordStopSec).toBeCloseTo(1.7)
   })
 })

@@ -141,6 +141,31 @@ describe('createPlaybackEngine.play', () => {
     expect(onEnded).toHaveBeenCalledTimes(1)
   })
 
+  it('keepAlive 모드: 노트가 없어도 transport.start를 호출하고 자동종료(scheduleOnce)/onEnded를 등록하지 않는다', async () => {
+    const t = createTrack('Piano') // 노트 없음
+    const p = addTrack(createEmptyProject('S'), t)
+    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: vi.fn(), volume: { value: 0 } }))
+    const onEnded = vi.fn()
+    await engine.play(p, onEnded, undefined, { keepAlive: true })
+    // 빈 트랙이어도 transport는 시작되어 Stop 전까지 유지된다
+    expect(transport.start).toHaveBeenCalledTimes(1)
+    // 자동종료를 등록하지 않는다 → 녹음 중 즉시 종료 방지
+    expect(transport.scheduleOnce).not.toHaveBeenCalled()
+    expect(onEnded).not.toHaveBeenCalled()
+  })
+
+  it('keepAlive 모드: 노트가 있어도 자동종료(scheduleOnce)를 등록하지 않고 transport.start만 호출한다', async () => {
+    const t = createTrack('Piano')
+    let p = addTrack(createEmptyProject('S'), t)
+    p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
+    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: vi.fn(), volume: { value: 0 } }))
+    const onEnded = vi.fn()
+    await engine.play(p, onEnded, undefined, { keepAlive: true })
+    expect(transport.start).toHaveBeenCalledTimes(1)
+    expect(transport.scheduleOnce).not.toHaveBeenCalled()
+    expect(onEnded).not.toHaveBeenCalled()
+  })
+
   it('isValid가 false면(레이스) stop/schedule/transport.start를 호출하지 않는다', async () => {
     const triggerAR = vi.fn()
     const t = createTrack('Piano')

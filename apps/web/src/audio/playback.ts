@@ -31,9 +31,19 @@ export interface MultiInstrument {
   volume: { value: number }
 }
 
+/** play 옵션. keepAlive: 녹음 모드 — 노트가 없거나 끝나도 Stop 전까지 transport를 유지(자동종료 미등록). */
+export interface PlayOptions {
+  keepAlive?: boolean
+}
+
 export interface PlaybackEngine {
   /** 프로젝트 전체를 audibleTrackIds 기준으로 재생. onEnded: 마지막 노트 후 호출. isValid: cold-start 레이스 가드. */
-  play: (project: Project, onEnded?: () => void, isValid?: () => boolean) => Promise<void>
+  play: (
+    project: Project,
+    onEnded?: () => void,
+    isValid?: () => boolean,
+    opts?: PlayOptions,
+  ) => Promise<void>
   stop: () => void
   getSeconds: () => number
 }
@@ -47,7 +57,7 @@ export function createPlaybackEngine(
 ): PlaybackEngine {
   const transport = Tone.getTransport()
   return {
-    async play(project, onEnded, isValid) {
+    async play(project, onEnded, isValid, opts) {
       await Tone.start()
       // cold-start await 동안 stop/언마운트가 발생했으면 무시
       if (isValid && !isValid()) return
@@ -78,7 +88,11 @@ export function createPlaybackEngine(
       }
 
       const endSec = items.reduce((m, it) => Math.max(m, it.timeSec + it.durationSec), 0)
-      if (endSec > 0) {
+      if (opts?.keepAlive) {
+        // 녹음 모드: 빈 트랙(endSec===0)이어도 transport를 시작해 Stop 전까지 유지.
+        // 자동종료(scheduleOnce)/onEnded를 등록하지 않는다 — 사용자가 Stop할 때까지 녹음 지속.
+        transport.start()
+      } else if (endSec > 0) {
         transport.scheduleOnce(() => { transport.stop(); transport.cancel(); onEnded?.() }, endSec)
         transport.start()
       } else {

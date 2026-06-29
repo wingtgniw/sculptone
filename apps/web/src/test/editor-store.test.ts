@@ -46,4 +46,15 @@ describe('editor store', () => {
     expect(after.selectedTrackId).toBe(before.selectedTrackId)
     expect(after.selectedNoteId).toBe('keep-me')
   })
+
+  it('초기 isRecording은 false이다', () => {
+    expect(useStore.getState().isRecording).toBe(false)
+  })
+
+  it('setRecording(true) → isRecording true, setRecording(false) → false', () => {
+    useStore.getState().setRecording(true)
+    expect(useStore.getState().isRecording).toBe(true)
+    useStore.getState().setRecording(false)
+    expect(useStore.getState().isRecording).toBe(false)
+  })
 })

@@ -21,4 +21,28 @@ describe('TransportBar', () => {
     expect(onStop).toHaveBeenCalled()
     expect(useStore.getState().isPlaying).toBe(false)
   })
+
+  it('녹음 버튼이 렌더된다 (aria-label="녹음")', () => {
+    render(<TransportBar onPlay={() => {}} onStop={() => {}} />)
+    expect(screen.getByRole('button', { name: '녹음' })).toBeInTheDocument()
+  })
+
+  it('녹음 버튼 클릭 시 isRecording이 true가 된다', async () => {
+    render(<TransportBar onPlay={() => {}} onStop={() => {}} />)
+    await userEvent.click(screen.getByRole('button', { name: '녹음' }))
+    expect(useStore.getState().isRecording).toBe(true)
+  })
+
+  it('두 번 클릭 시 isRecording이 false로 토글된다', async () => {
+    render(<TransportBar onPlay={() => {}} onStop={() => {}} />)
+    await userEvent.click(screen.getByRole('button', { name: '녹음' }))
+    await userEvent.click(screen.getByRole('button', { name: '녹음' }))
+    expect(useStore.getState().isRecording).toBe(false)
+  })
+
+  it('isRecording=true 시 REC 배지가 표시된다', () => {
+    useStore.getState().setRecording(true)
+    render(<TransportBar onPlay={() => {}} onStop={() => {}} />)
+    expect(screen.getByText('REC')).toBeInTheDocument()
+  })
 })

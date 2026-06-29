@@ -12,6 +12,9 @@ export interface AppState {
   selectedNoteId: string | null
   quantizeDenom: number
   isPlaying: boolean
+  isRecording: boolean
+  /** 마지막 stop() 시점의 transport 위치(초). 녹음 커밋 endSec 계산에 사용. */
+  recordStopSec: number
   setMode: (mode: Mode) => void
   setProject: (project: Project) => void
   replaceProject: (project: Project) => void
@@ -19,6 +22,8 @@ export interface AppState {
   selectNote: (noteId: string | null) => void
   setQuantizeDenom: (denom: number) => void
   setPlaying: (playing: boolean) => void
+  setRecording: (recording: boolean) => void
+  setRecordStopSec: (sec: number) => void
 }
 
 function initialProject(): Project {
@@ -34,6 +39,8 @@ export const useStore = create<AppState>((set) => ({
   selectedNoteId: null,
   quantizeDenom: 16,
   isPlaying: false,
+  isRecording: false,
+  recordStopSec: 0,
   setMode: (mode) => set({ activeMode: mode }),
   // 인플레이스 편집용: 선택 상태를 유지한다(절대 변경 금지).
   setProject: (project) => set({ project }),
@@ -44,4 +51,6 @@ export const useStore = create<AppState>((set) => ({
   selectNote: (noteId) => set({ selectedNoteId: noteId }),
   setQuantizeDenom: (denom) => set({ quantizeDenom: denom }),
   setPlaying: (playing) => set({ isPlaying: playing }),
+  setRecording: (recording) => set({ isRecording: recording }),
+  setRecordStopSec: (sec) => set({ recordStopSec: sec }),
 }))

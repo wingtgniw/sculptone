@@ -17,4 +17,10 @@ describe('store', () => {
     useStore.getState().setMode('play')
     expect(useStore.getState().activeMode).toBe('play')
   })
+
+  it('recordStopSec 기본값은 0이고 setRecordStopSec로 갱신된다', () => {
+    expect(useStore.getState().recordStopSec).toBe(0)
+    useStore.getState().setRecordStopSec(2.5)
+    expect(useStore.getState().recordStopSec).toBe(2.5)
+  })
 })

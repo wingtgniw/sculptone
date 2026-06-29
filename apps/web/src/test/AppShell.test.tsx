@@ -6,6 +6,18 @@ import { useStore } from '../state/store'
 
 vi.mock('../audio/useAudio', () => ({ useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }) }))
 vi.mock('../io/useAutosave', () => ({ useAutosave: () => {} }))
+vi.mock('../midi/useMidi', () => ({
+  useMidi: () => ({
+    devices: [],
+    selectedDeviceId: null,
+    selectDevice: () => {},
+    isSupported: true,
+    accessError: null,
+  }),
+}))
+vi.mock('../midi/useRecording', () => ({
+  useRecording: () => ({ handleMidiMessage: () => {} }),
+}))
 
 describe('AppShell', () => {
   beforeEach(() => {
