@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@sculptone/score-model": "workspace:*"
+    "@sculptone/score-model": "workspace:*",
+    "tone": "^15.1.22"
   }
 }
