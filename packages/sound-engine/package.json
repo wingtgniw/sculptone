@@ -1,0 +1,14 @@
+{
+  "name": "@sculptone/sound-engine",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sculptone/score-model": "workspace:*"
+  }
+}
