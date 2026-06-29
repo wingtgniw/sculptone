@@ -1,4 +1,4 @@
-import { type CSSProperties } from 'react'
+import { type CSSProperties, useEffect } from 'react'
 import { useStore, type Mode } from '../state/store'
 import { Tabs } from '../ui/Tabs'
 import { FileMenu } from '../ui/FileMenu'
@@ -23,6 +23,18 @@ const TABS = [
 ]
 const region: CSSProperties = { background: 'var(--bg-surface)', border: '1px solid var(--border)' }
 
+const undoBtnBase: CSSProperties = {
+  font: 'inherit', fontSize: 12, fontWeight: 600,
+  padding: '2px 8px', borderRadius: 'var(--r-sm)',
+  border: '1px solid var(--border)', cursor: 'pointer',
+  background: 'var(--bg-elevated)', color: 'var(--text-mid)',
+  lineHeight: 1.4,
+}
+const undoBtnDisabled: CSSProperties = {
+  ...undoBtnBase,
+  opacity: 0.35, cursor: 'not-allowed',
+}
+
 export function AppShell() {
   useAutosave()
 
@@ -34,9 +46,33 @@ export function AppShell() {
   const timeSignature  = useStore((s) => s.project.transport.timeSignature)
   const { play, stop, getSeconds } = useAudio()
 
+  const undo     = useStore((s) => s.undo)
+  const redo     = useStore((s) => s.redo)
+  const canUndo  = useStore((s) => s.history.past.length > 0)
+  const canRedo  = useStore((s) => s.history.future.length > 0)
+
   const { handleMidiMessage } = useRecording()
   const { devices, selectedDeviceId, selectDevice, isSupported, accessError } =
     useMidi(handleMidiMessage)
+
+  const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent)
+  const modLabel = isMac ? 'Cmd' : 'Ctrl'
+
+  // 전역 키보드 단축키: Ctrl/Cmd+Z = undo, Ctrl/Cmd+Shift+Z 또는 Ctrl+Y = redo.
+  // input/textarea 포커스 시에는 무시(텍스트 편집 우선).
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      const mod = isMac ? e.metaKey : e.ctrlKey
+      const k = e.key.toLowerCase()
+      if (mod && !e.shiftKey && k === 'z') { e.preventDefault(); undo() }
+      if (mod && e.shiftKey && k === 'z') { e.preventDefault(); redo() }
+      if (!isMac && e.ctrlKey && !e.shiftKey && k === 'y') { e.preventDefault(); redo() }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo, isMac])
 
   return (
     <div style={{ display: 'grid', gridTemplateRows: '48px 1fr 64px', height: '100%' }}>
@@ -44,6 +80,27 @@ export function AppShell() {
       <div style={{ ...region, display: 'flex', alignItems: 'center', gap: 12, padding: '0 14px' }}>
         <strong style={{ letterSpacing: '-0.02em' }}>Sculptone</strong>
         <Tabs items={TABS} active={activeMode} onChange={(id) => setMode(id as Mode)} />
+
+        {/* Undo / Redo 버튼 */}
+        <button
+          aria-label="실행 취소"
+          disabled={!canUndo}
+          onClick={undo}
+          title={`Undo (${modLabel}+Z)`}
+          style={canUndo ? undoBtnBase : undoBtnDisabled}
+        >
+          ↩
+        </button>
+        <button
+          aria-label="다시 실행"
+          disabled={!canRedo}
+          onClick={redo}
+          title={`Redo (${modLabel}+Shift+Z)`}
+          style={canRedo ? undoBtnBase : undoBtnDisabled}
+        >
+          ↪
+        </button>
+
         {activeMode === 'compose' && (
           <div style={{ display: 'flex', gap: 2 }}>
             <button
