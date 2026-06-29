@@ -29,4 +29,11 @@ describe('AppShell', () => {
     render(<AppShell />)
     expect(screen.getByRole('tab', { name: 'Transcribe' })).toBeDisabled()
   })
+
+  it('Play 탭으로 전환 시 MixerPanel이 렌더된다', async () => {
+    render(<AppShell />)
+    await userEvent.click(screen.getByRole('tab', { name: 'Play' }))
+    // MixerPanel은 "Mixer" 헤더 텍스트를 렌더함
+    expect(screen.getByText(/mixer/i)).toBeInTheDocument()
+  })
 })

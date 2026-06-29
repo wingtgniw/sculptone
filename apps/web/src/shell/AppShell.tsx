@@ -9,6 +9,7 @@ import { Playhead } from '../compose/Playhead'
 import { TransportBar } from '../audio/TransportBar'
 import { useAudio } from '../audio/useAudio'
 import { useAutosave } from '../io/useAutosave'
+import { MixerPanel } from '../play/MixerPanel'
 
 const TABS = [
   { id: 'compose',    label: 'Compose' },
@@ -51,8 +52,8 @@ export function AppShell() {
             </div>
           )}
           {activeMode === 'play' && (
-            <div style={{ display: 'grid', placeItems: 'center', height: '100%', color: 'var(--text-lo)' }}>
-              Play 믹서 (다음 계획)
+            <div style={{ overflowY: 'auto', height: '100%' }}>
+              <MixerPanel />
             </div>
           )}
         </div>
