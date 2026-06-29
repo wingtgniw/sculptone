@@ -14,6 +14,7 @@ import { useMidi } from '../midi/useMidi'
 import { useRecording } from '../midi/useRecording'
 import { MidiDeviceSelect } from '../midi/MidiDeviceSelect'
 import { NotationView } from '../notation/NotationView'
+import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 
 const TABS = [
   { id: 'compose',    label: 'Compose' },
@@ -118,6 +119,9 @@ export function AppShell() {
       <div style={region}>
         <TransportBar onPlay={play} onStop={stop} />
       </div>
+
+      {/* 사운드 디자인 패널 (전역 오버레이 — soundPanelTrackId !== null 일 때 표시) */}
+      <SoundDesignPanel />
     </div>
   )
 }

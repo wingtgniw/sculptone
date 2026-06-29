@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AppShell } from '../shell/AppShell'
 import { useStore } from '../state/store'
+import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 
 vi.mock('../audio/useAudio', () => ({ useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }) }))
 vi.mock('../io/useAutosave', () => ({ useAutosave: () => {} }))
@@ -20,6 +21,9 @@ vi.mock('../midi/useRecording', () => ({
 }))
 vi.mock('../notation/NotationView', () => ({
   NotationView: () => <div data-testid="notation-view" />,
+}))
+vi.mock('../sound/SoundDesignPanel', () => ({
+  SoundDesignPanel: vi.fn(() => null),
 }))
 
 describe('AppShell', () => {
@@ -69,5 +73,10 @@ describe('AppShell', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Score' }))
     await userEvent.click(screen.getByRole('button', { name: 'Roll' }))
     expect(screen.getByTestId('pianoroll')).toBeInTheDocument()
+  })
+
+  it('SoundDesignPanel이 AppShell과 함께 마운트된다', () => {
+    render(<AppShell />)
+    expect(vi.mocked(SoundDesignPanel)).toHaveBeenCalled()
   })
 })

@@ -6,10 +6,12 @@ import type { ChangeEvent } from 'react'
 const PRESETS = listPresets()
 
 export function TracksPanel() {
-  const project       = useStore((s) => s.project)
-  const selectedTrackId = useStore((s) => s.selectedTrackId)
-  const setProject    = useStore((s) => s.setProject)
-  const selectTrack   = useStore((s) => s.selectTrack)
+  const project              = useStore((s) => s.project)
+  const selectedTrackId      = useStore((s) => s.selectedTrackId)
+  const soundPanelTrackId    = useStore((s) => s.soundPanelTrackId)
+  const setProject           = useStore((s) => s.setProject)
+  const selectTrack          = useStore((s) => s.selectTrack)
+  const setSoundPanelTrackId = useStore((s) => s.setSoundPanelTrackId)
 
   const handleAddTrack = () => {
     // 기존 "Track N" 이름 중 최대 N+1을 사용해 삭제 후 재추가 시 중복 방지
@@ -28,6 +30,9 @@ export function TracksPanel() {
     setProject(updated)
     if (selectedTrackId === trackId) {
       selectTrack(updated.tracks[0]!.id)
+    }
+    if (soundPanelTrackId === trackId) {
+      setSoundPanelTrackId(null)
     }
   }
 
@@ -59,7 +64,6 @@ export function TracksPanel() {
 
       {project.tracks.map((t) => {
         const sel = t.id === selectedTrackId
-        const currentPreset = t.sound.kind === 'preset' ? t.sound.presetId : 'acoustic-piano'
         return (
           <div key={t.id} style={{ marginBottom: 8 }}>
             {/* 트랙 선택 행 */}
@@ -79,29 +83,43 @@ export function TracksPanel() {
                 {t.name}
               </button>
               {sel && (
-                <button
-                  aria-label="Delete Track"
-                  disabled={!canDelete}
-                  onClick={() => handleDeleteTrack(t.id)}
-                  style={{
-                    font: 'inherit', fontSize: 10, padding: '3px 6px',
-                    borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
-                    cursor: canDelete ? 'pointer' : 'not-allowed',
-                    background: 'transparent',
-                    color: canDelete ? 'var(--text-lo)' : 'var(--text-disabled)',
-                    opacity: canDelete ? 1 : 0.4,
-                  }}
-                >
-                  ✕
-                </button>
+                <>
+                  <button
+                    aria-label="Edit sound"
+                    onClick={() => setSoundPanelTrackId(t.id)}
+                    style={{
+                      font: 'inherit', fontSize: 10, padding: '3px 6px',
+                      borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
+                      cursor: 'pointer', background: 'var(--accent-soft)',
+                      color: 'var(--accent)',
+                    }}
+                  >
+                    ♪
+                  </button>
+                  <button
+                    aria-label="Delete Track"
+                    disabled={!canDelete}
+                    onClick={() => handleDeleteTrack(t.id)}
+                    style={{
+                      font: 'inherit', fontSize: 10, padding: '3px 6px',
+                      borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
+                      cursor: canDelete ? 'pointer' : 'not-allowed',
+                      background: 'transparent',
+                      color: canDelete ? 'var(--text-lo)' : 'var(--text-disabled)',
+                      opacity: canDelete ? 1 : 0.4,
+                    }}
+                  >
+                    ✕
+                  </button>
+                </>
               )}
             </div>
 
-            {/* 프리셋 드롭다운 (선택된 트랙에만 표시) */}
-            {sel && (
+            {/* 프리셋 드롭다운 (선택된 preset 트랙에만 표시) */}
+            {sel && t.sound.kind === 'preset' && (
               <select
                 aria-label="Preset"
-                value={currentPreset}
+                value={t.sound.presetId}
                 onChange={(e) => handlePresetChange(t.id, e)}
                 style={{
                   width: '100%', marginTop: 4, font: 'inherit', fontSize: 11,
@@ -114,6 +132,20 @@ export function TracksPanel() {
                   <option key={p.id} value={p.id}>{p.label}</option>
                 ))}
               </select>
+            )}
+
+            {/* 커스텀 패치 배지 (선택된 patch 트랙에만 표시) */}
+            {sel && t.sound.kind === 'patch' && (
+              <span
+                aria-label="Custom Patch"
+                style={{
+                  display: 'inline-block', marginTop: 4, fontSize: 10,
+                  padding: '2px 6px', borderRadius: 'var(--r-sm)',
+                  background: 'var(--accent-soft)', color: 'var(--accent)',
+                }}
+              >
+                Custom Patch
+              </span>
             )}
           </div>
         )

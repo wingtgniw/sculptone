@@ -1,0 +1,183 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useStore } from '../../state/store'
+import { updateTrackSound } from '@sculptone/score-model'
+
+// Tone.start 모킹 (AudioContext 초기화 방지)
+vi.mock('tone', () => ({
+  start: vi.fn().mockResolvedValue(undefined),
+}))
+
+// createInstrumentFromSound → preview만 사용, Tone 초기화 방지
+vi.mock('@sculptone/sound-engine', () => ({
+  listPresets: vi.fn(() => [
+    { id: 'acoustic-piano', label: 'Acoustic Piano', kind: 'sampler', source: 'salamander' },
+    { id: 'synth-lead',     label: 'Synth Lead',     kind: 'synth',   source: 'Synth' },
+    { id: 'electric-piano', label: 'Electric Piano', kind: 'synth',   source: 'AMSynth' },
+  ]),
+  createInstrumentFromSound: vi.fn(() => ({
+    triggerAttackRelease: vi.fn(),
+    volume: { value: 0 },
+    dispose: vi.fn(),
+  })),
+}))
+
+import * as Tone from 'tone'
+import { SoundDesignPanel } from '../SoundDesignPanel'
+
+const BASE_PATCH = {
+  kind: 'patch' as const,
+  engine: 'synth' as const,
+  envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+}
+
+describe('SoundDesignPanel', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    vi.clearAllMocks()
+  })
+
+  it('soundPanelTrackId가 null이면 아무것도 렌더하지 않는다', () => {
+    const { container } = render(<SoundDesignPanel />)
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('soundPanelTrackId가 설정되면 dialog role의 패널이 열린다', () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('dialog', { name: /sound design/i })).toBeInTheDocument()
+  })
+
+  it('preset sound이면 "Sound preset" 드롭다운이 표시된다', () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('combobox', { name: /sound preset/i })).toBeInTheDocument()
+  })
+
+  it('"Switch to Patch" 버튼 클릭 시 sound.kind가 patch가 된다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /switch to (custom )?patch/i }))
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind).toBe('patch')
+  })
+
+  it('patch sound이면 Engine 드롭다운이 표시된다', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('combobox', { name: /synth engine/i })).toBeInTheDocument()
+  })
+
+  it('patch sound이면 ADSR 슬라이더가 4개 이상 존재한다', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    expect(screen.getAllByRole('slider').length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('Engine 드롭다운 변경 시 sound.engine이 갱신된다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: /synth engine/i }), 'fm')
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && (updated.sound as { engine: string }).engine).toBe('fm')
+  })
+
+  it('Attack 슬라이더 변경 시 envelope.attack이 갱신된다', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    fireEvent.change(screen.getByRole('slider', { name: /envelope attack/i }), { target: { value: '0.5' } })
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind).toBe('patch')
+    if (updated.sound.kind === 'patch') expect(updated.sound.envelope.attack).toBeCloseTo(0.5)
+  })
+
+  it('Filter 체크박스 활성화 시 Filter type 드롭다운이 나타난다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('checkbox', { name: /enable filter/i }))
+    expect(screen.getByRole('combobox', { name: /filter type/i })).toBeInTheDocument()
+  })
+
+  it('Reverb 체크박스 활성화 시 effects에 reverb가 추가된다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('checkbox', { name: /enable reverb/i }))
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind).toBe('patch')
+    if (updated.sound.kind === 'patch') {
+      expect(updated.sound.effects?.some((fx) => fx.type === 'reverb')).toBe(true)
+    }
+  })
+
+  it('닫기 버튼 클릭 시 soundPanelTrackId가 null이 된다', async () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /close sound panel/i }))
+    expect(useStore.getState().soundPanelTrackId).toBeNull()
+  })
+
+  it('프리뷰 버튼이 존재하고 클릭해도 오류가 없다(스모크)', async () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('button', { name: /preview sound/i })).toBeInTheDocument()
+    await expect(userEvent.click(screen.getByRole('button', { name: /preview sound/i }))).resolves.not.toThrow()
+  })
+
+  it('"Use Preset Instead" 버튼 클릭 시 sound.kind가 preset으로 돌아온다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /use preset instead/i }))
+    expect(useStore.getState().project.tracks[0]!.sound.kind).toBe('preset')
+  })
+
+  it('reverb decay 슬라이더의 min은 0.1이고 wet 슬라이더의 min은 0이다(Fix 1 회귀)', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, {
+      ...BASE_PATCH,
+      effects: [{ type: 'reverb' as const, wet: 0.3, decay: 2 }],
+    }))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    const decaySlider = screen.getByRole('slider', { name: /reverb decay/i })
+    const wetSlider   = screen.getByRole('slider', { name: /reverb wet/i })
+    expect(decaySlider).toHaveAttribute('min', '0.1')
+    expect(wetSlider).toHaveAttribute('min', '0')
+  })
+
+  it('preview 클릭 시 Tone.start가 호출된다(Fix 2 스모크)', async () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('button', { name: /preview sound/i }))
+    expect(vi.mocked(Tone.start)).toHaveBeenCalled()
+  })
+})

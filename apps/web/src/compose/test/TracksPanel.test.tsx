@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useStore } from '../../state/store'
+import { updateTrackSound } from '@sculptone/score-model'
 import { TracksPanel } from '../TracksPanel'
 
 describe('TracksPanel', () => {
@@ -77,5 +78,40 @@ describe('TracksPanel', () => {
     await userEvent.selectOptions(select, 'synth-lead')
     const updated = useStore.getState().project.tracks.find((t) => t.id === trackId)!
     expect(updated.sound).toEqual({ kind: 'preset', presetId: 'synth-lead' })
+  })
+
+  it('"Edit Sound" 버튼 클릭 시 soundPanelTrackId가 선택 트랙 ID로 설정된다', async () => {
+    render(<TracksPanel />)
+    const trackId = useStore.getState().selectedTrackId
+    await userEvent.click(screen.getByRole('button', { name: /edit sound/i }))
+    expect(useStore.getState().soundPanelTrackId).toBe(trackId)
+  })
+
+  it('patch 트랙 선택 시 프리셋 드롭다운이 없고 커스텀 패치 배지가 보인다(Fix 3)', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+    }))
+    render(<TracksPanel />)
+    expect(screen.queryByRole('combobox', { name: /preset/i })).toBeNull()
+    expect(screen.getByText(/custom patch/i)).toBeInTheDocument()
+  })
+
+  it('사운드 패널이 열린 트랙 삭제 시 패널이 닫힌다(Fix 5)', async () => {
+    render(<TracksPanel />)
+    // 트랙 추가 (2개가 되어야 삭제 가능)
+    await userEvent.click(screen.getByRole('button', { name: /add track/i }))
+    const s = useStore.getState()
+    const firstTrackId = s.project.tracks[0]!.id
+    // 첫 번째 트랙(Piano) 선택 후 사운드 패널 열기
+    await userEvent.click(screen.getByRole('button', { name: /Piano/ }))
+    await userEvent.click(screen.getByRole('button', { name: /edit sound/i }))
+    expect(useStore.getState().soundPanelTrackId).toBe(firstTrackId)
+    // 첫 번째 트랙 삭제 → 패널 닫힘
+    await userEvent.click(screen.getByRole('button', { name: /delete track/i }))
+    expect(useStore.getState().soundPanelTrackId).toBeNull()
   })
 })

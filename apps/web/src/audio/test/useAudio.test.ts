@@ -19,9 +19,11 @@ vi.mock('tone', () => ({
   Frequency: (n: number) => ({ toNote: () => `note${n}` }),
 }))
 
-// sound-engine 모킹: createInstrument → 스파이 객체 반환
+// sound-engine 모킹: createInstrument / createInstrumentFromSound → 스파이 객체 반환
 const mockDispose = vi.fn()
 const mockTrigger = vi.fn()
+const mockPatchDispose = vi.fn()
+const mockPatchTrigger = vi.fn()
 vi.mock('@sculptone/sound-engine', () => ({
   createInstrument: vi.fn(() => ({
     triggerAttackRelease: mockTrigger,
@@ -30,9 +32,15 @@ vi.mock('@sculptone/sound-engine', () => ({
   })),
   descriptorToToneSpec: vi.fn(() => ({ kind: 'synth', toneClass: 'Synth' })),
   getPreset: vi.fn((id: string) => ({ id, label: id, kind: 'synth', source: 'Synth' })),
+  // 새로 추가: patch 경로용
+  createInstrumentFromSound: vi.fn(() => ({
+    triggerAttackRelease: mockPatchTrigger,
+    volume: { value: 0 },
+    dispose: mockPatchDispose,
+  })),
 }))
 
-import { createInstrument } from '@sculptone/sound-engine'
+import { createInstrument, createInstrumentFromSound } from '@sculptone/sound-engine'
 import { useAudio } from '../useAudio'
 import { createTrack, addTrack, updateTrackSound } from '@sculptone/score-model'
 
@@ -132,5 +140,87 @@ describe('useAudio — 멀티트랙 instrument 관리', () => {
     mockSeconds = 1.7
     act(() => { result.current.stop() })
     expect(useStore.getState().recordStopSec).toBeCloseTo(1.7)
+  })
+})
+
+describe('useAudio — patch instrument 관리', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    mockSeconds = 0
+    vi.clearAllMocks()
+  })
+
+  it('patch sound 트랙은 createInstrumentFromSound 경로로 instrument를 생성한다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    // preset → patch 전환
+    s.setProject(updateTrackSound(s.project, trackId, {
+      kind: 'patch', engine: 'synth',
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+    }))
+    const { result } = renderHook(() => useAudio())
+    await act(async () => { result.current.play() })
+    expect(createInstrumentFromSound).toHaveBeenCalledTimes(1)
+    // preset 경로(createInstrument)는 호출되지 않아야 함
+    expect(createInstrument).not.toHaveBeenCalled()
+  })
+
+  it('patch envelope 변경 후 play() 시 instrument가 dispose + 재생성된다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    const basePatch = { kind: 'patch' as const, engine: 'synth' as const, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 } }
+    s.setProject(updateTrackSound(s.project, trackId, basePatch))
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => { result.current.play() })
+    expect(createInstrumentFromSound).toHaveBeenCalledTimes(1)
+
+    // envelope 변경 (attack: 0.5)
+    const updated = useStore.getState()
+    updated.setProject(updateTrackSound(updated.project, trackId, {
+      ...basePatch,
+      envelope: { ...basePatch.envelope, attack: 0.5 },
+    }))
+
+    await act(async () => { result.current.play() })
+    expect(mockPatchDispose).toHaveBeenCalledTimes(1)
+    expect(createInstrumentFromSound).toHaveBeenCalledTimes(2)
+  })
+
+  it('preset→patch 전환 후 play() 시 기존 preset instrument가 dispose + patch instrument 생성', async () => {
+    // 먼저 preset으로 play
+    const { result } = renderHook(() => useAudio())
+    await act(async () => { result.current.play() })
+    expect(createInstrument).toHaveBeenCalledTimes(1)
+
+    // patch로 전환
+    const s = useStore.getState()
+    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
+      kind: 'patch', engine: 'am',
+      envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
+    }))
+    await act(async () => { result.current.play() })
+    // 기존 preset instrument dispose
+    expect(mockDispose).toHaveBeenCalledTimes(1)
+    // 새 patch instrument 생성
+    expect(createInstrumentFromSound).toHaveBeenCalledTimes(1)
+  })
+
+  it('동일 patch로 두 번 play 시 createInstrumentFromSound가 1회만 호출되고 dispose는 호출되지 않는다(Fix 7 캐시히트)', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    const basePatch = {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+    }
+    s.setProject(updateTrackSound(s.project, trackId, basePatch))
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => { result.current.play() })
+    await act(async () => { result.current.play() })
+
+    expect(createInstrumentFromSound).toHaveBeenCalledTimes(1)
+    expect(mockPatchDispose).not.toHaveBeenCalled()
   })
 })

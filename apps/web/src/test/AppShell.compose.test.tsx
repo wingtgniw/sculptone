@@ -21,6 +21,9 @@ vi.mock('../midi/useRecording', () => ({
 vi.mock('../notation/NotationView', () => ({
   NotationView: () => <div data-testid="notation-view" />,
 }))
+vi.mock('../sound/SoundDesignPanel', () => ({
+  SoundDesignPanel: vi.fn(() => null),
+}))
 
 describe('AppShell compose mode', () => {
   beforeEach(() => { useStore.setState({ activeMode: 'compose' }) })
