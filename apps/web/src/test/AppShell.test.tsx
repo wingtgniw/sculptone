@@ -5,6 +5,7 @@ import { AppShell } from '../shell/AppShell'
 import { useStore } from '../state/store'
 
 vi.mock('../audio/useAudio', () => ({ useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }) }))
+vi.mock('../io/useAutosave', () => ({ useAutosave: () => {} }))
 
 describe('AppShell', () => {
   beforeEach(() => {

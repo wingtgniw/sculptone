@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useStore } from '../state/store'
+import { createEmptyProject, createTrack, addTrack } from '@sculptone/score-model'
 
 describe('editor store', () => {
   beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
@@ -23,5 +24,26 @@ describe('editor store', () => {
     expect(useStore.getState().selectedNoteId).toBeNull()
     setQuantizeDenom(8); expect(useStore.getState().quantizeDenom).toBe(8)
     setPlaying(true); expect(useStore.getState().isPlaying).toBe(true)
+  })
+
+  it('replaceProject는 새 첫 트랙으로 selectedTrackId를 갱신하고 selectedNoteId를 null로 설정', () => {
+    // 노트를 선택해 두고 다른 트랙을 가진 새 프로젝트로 교체
+    useStore.getState().selectNote('some-note')
+    const fresh = addTrack(createEmptyProject('Fresh'), createTrack('NewTrack'))
+    useStore.getState().replaceProject(fresh)
+    const s = useStore.getState()
+    expect(s.project.id).toBe(fresh.id)
+    expect(s.selectedTrackId).toBe(fresh.tracks[0]!.id)
+    expect(s.selectedNoteId).toBeNull()
+  })
+
+  it('setProject는 선택 상태를 변경하지 않는다(인플레이스 편집 보호)', () => {
+    const before = useStore.getState()
+    const edited = { ...before.project }
+    before.selectNote('keep-me')
+    before.setProject(edited)
+    const after = useStore.getState()
+    expect(after.selectedTrackId).toBe(before.selectedTrackId)
+    expect(after.selectedNoteId).toBe('keep-me')
   })
 })

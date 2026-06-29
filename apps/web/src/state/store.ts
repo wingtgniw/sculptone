@@ -14,6 +14,7 @@ export interface AppState {
   isPlaying: boolean
   setMode: (mode: Mode) => void
   setProject: (project: Project) => void
+  replaceProject: (project: Project) => void
   selectTrack: (trackId: string) => void
   selectNote: (noteId: string | null) => void
   setQuantizeDenom: (denom: number) => void
@@ -34,7 +35,11 @@ export const useStore = create<AppState>((set) => ({
   quantizeDenom: 16,
   isPlaying: false,
   setMode: (mode) => set({ activeMode: mode }),
+  // 인플레이스 편집용: 선택 상태를 유지한다(절대 변경 금지).
   setProject: (project) => set({ project }),
+  // 프로젝트 전체 교체용(New/Import 등): 선택을 새 첫 트랙으로 리셋한다.
+  replaceProject: (project) =>
+    set({ project, selectedTrackId: project.tracks[0]?.id ?? '', selectedNoteId: null }),
   selectTrack: (trackId) => set({ selectedTrackId: trackId, selectedNoteId: null }),
   selectNote: (noteId) => set({ selectedNoteId: noteId }),
   setQuantizeDenom: (denom) => set({ quantizeDenom: denom }),
