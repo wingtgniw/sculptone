@@ -1,6 +1,26 @@
 import { z } from 'zod'
 
-// 음색: P1은 preset만 사용. patch 변형은 P2 forward-compat(스키마만 선반영).
+const FilterSchema = z.object({
+  type: z.enum(['lowpass', 'highpass', 'bandpass']),
+  frequency: z.number().positive(),
+  Q: z.number().nonnegative(),
+})
+
+const EffectSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('reverb'),
+    wet: z.number().min(0).max(1),
+    decay: z.number().positive(),
+  }),
+  z.object({
+    type: z.literal('delay'),
+    wet: z.number().min(0).max(1),
+    time: z.number().positive(),
+    feedback: z.number().min(0).max(1),
+  }),
+])
+
+// 음색: preset(프리셋 참조) 또는 patch(커스텀 신스 패치). filter/effects는 옵셔널(하위호환).
 export const SoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('preset'), presetId: z.string() }),
   z.object({
@@ -12,6 +32,8 @@ export const SoundSchema = z.discriminatedUnion('kind', [
       sustain: z.number().min(0).max(1),
       release: z.number().nonnegative(),
     }),
+    filter: FilterSchema.optional(),
+    effects: z.array(EffectSchema).optional(),
   }),
 ])
 
