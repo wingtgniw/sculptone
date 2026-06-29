@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sculptone — Design Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ---- Neutral grayscale (흑백 기조) ---- */
+  --bg-inset:#070708;
+  --bg-base:#0C0C0D;
+  --bg-surface:#141415;
+  --bg-elevated:#1D1D1F;
+  --border:#2A2A2C;
+  --border-strong:#3A3A3D;
+
+  --text-hi:#F5F5F6;
+  --text-mid:#A6A6AA;
+  --text-lo:#6B6B70;
+
+  /* ---- Point color (단 하나) ---- */
+  --accent:#F2A65A;            /* Copper — "소리를 깎는" 물성 */
+  --accent-deep:#C97E3C;
+  --accent-soft:rgba(242,166,90,.14);
+
+  /* ---- Functional only ---- */
+  --record:#E2685F;            /* 녹음 표시 전용 */
+
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-pill:999px;
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 8px 24px rgba(0,0,0,.5);
+  --maxw:1080px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:
+    radial-gradient(1100px 560px at 82% -12%, rgba(242,166,90,.07), transparent 60%),
+    var(--bg-base);
+  color:var(--text-hi);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+header.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(12,12,13,.72);border-bottom:1px solid var(--border)}
+.top-inner{display:flex;align-items:center;gap:16px;height:60px}
+.logo{display:flex;align-items:center;gap:11px;font-weight:700;font-size:17px;letter-spacing:-.02em}
+.logo .mark{width:30px;height:30px;flex:0 0 30px}
+.nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.nav a{color:var(--text-mid);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:var(--r-pill)}
+.nav a:hover{color:var(--text-hi);background:var(--bg-elevated)}
+.hero{padding:72px 0 48px;border-bottom:1px solid var(--border)}
+.hero .eyebrow{color:var(--accent);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.hero h1{font-size:clamp(36px,6vw,60px);line-height:1.05;letter-spacing:-.03em;margin:14px 0 18px;font-weight:800}
+.hero p{color:var(--text-mid);font-size:18px;max-width:620px;margin:0}
+.hero .tagline{color:var(--accent);font-style:italic}
+.pill-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--border-strong);border-radius:var(--r-pill);font-size:13px;color:var(--text-mid);background:var(--bg-surface)}
+.pill b{color:var(--text-hi);font-weight:600}
+section{padding:56px 0;border-bottom:1px solid var(--border)}
+.sec-label{color:var(--accent);font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+h2{font-size:28px;letter-spacing:-.02em;margin:0 0 8px;font-weight:700}
+.sub{color:var(--text-mid);margin:0 0 28px;max-width:620px}
+h3{font-size:16px;margin:32px 0 14px;font-weight:600;color:var(--text-hi)}
+.swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.swatch{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-surface)}
+.swatch .chip{height:76px}
+.swatch .meta{padding:10px 12px}
+.swatch .name{font-size:13px;font-weight:600}
+.swatch .hex{font-size:12px;color:var(--text-lo)}
+.type-row{display:flex;align-items:baseline;gap:18px;padding:14px 0;border-bottom:1px dashed var(--border)}
+.type-row:last-child{border-bottom:0}
+.type-spec{flex:0 0 150px;color:var(--text-lo);font-size:12px}
+.type-spec b{display:block;color:var(--text-mid);font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{margin:0;color:var(--text-mid);font-size:13.5px}
+.demo{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:var(--r-md);padding:10px 18px;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+.btn-primary{background:var(--accent);color:#1a1206}
+.btn-primary:hover{background:#ffb976}
+.btn-secondary{background:var(--bg-elevated);color:var(--text-hi);border-color:var(--border-strong)}
+.btn-secondary:hover{border-color:var(--accent)}
+.btn-ghost{background:transparent;color:var(--text-mid)}
+.btn-ghost:hover{color:var(--text-hi);background:var(--bg-elevated)}
+.btn-danger{background:transparent;color:var(--record);border-color:rgba(226,104,95,.4)}
+.transport{display:flex;align-items:center;gap:6px;background:var(--bg-inset);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 12px}
+.tbtn{width:38px;height:38px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--bg-elevated);color:var(--text-hi);cursor:pointer}
+.tbtn:hover{background:var(--border-strong)}
+.tbtn.rec{background:var(--record);color:#fff}
+.tbtn.play{width:46px;height:46px;background:var(--accent);color:#1a1206}
+.time{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-mid);margin-left:6px}
+.slider{appearance:none;-webkit-appearance:none;width:200px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--text-hi) 0 60%,var(--border-strong) 60%);outline:none}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--text-hi);box-shadow:0 0 0 4px rgba(255,255,255,.12);cursor:pointer}
+.tabs{display:inline-flex;background:var(--bg-inset);border:1px solid var(--border);border-radius:var(--r-pill);padding:4px}
+.tab{padding:7px 16px;border-radius:var(--r-pill);font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer}
+.tab.active{background:var(--accent);color:#1a1206}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r-pill)}
+.badge.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge-rec{color:var(--record);background:rgba(226,104,95,.12)}
+.badge-neutral{color:var(--text-mid);background:var(--bg-elevated)}
+.screen{border:1px solid var(--border-strong);border-radius:var(--r-lg);overflow:hidden;background:var(--bg-base);box-shadow:var(--shadow-2);margin-top:8px}
+.s-chrome{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--bg-elevated);border-bottom:1px solid var(--border)}
+.s-dot{width:11px;height:11px;border-radius:50%}
+.s-title{margin-left:10px;font-size:12px;color:var(--text-lo)}
+.s-toolbar{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;background:var(--bg-surface);border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)}
+.mini-btn{padding:6px 11px;border-radius:var(--r-sm);background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-mid);font-size:12px}
+.mini-btn.accent{background:var(--accent);color:#1a1206;border-color:transparent;font-weight:600}
+.s-body{display:flex;min-height:300px}
+.s-left{width:180px;border-right:1px solid var(--border);background:var(--bg-surface);padding:14px 12px}
+.s-right{width:200px;border-left:1px solid var(--border);background:var(--bg-surface);padding:14px 12px}
+.s-main{flex:1;position:relative;background:var(--bg-inset)}
+.track-lbl{font-size:11px;color:var(--text-lo);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px}
+.track{display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--r-sm);font-size:12px;color:var(--text-mid);margin-bottom:6px}
+.track.sel{background:var(--accent-soft);color:var(--text-hi)}
+.track .sw{width:10px;height:10px;border-radius:3px}
+.roll{position:absolute;inset:0;background:
+  repeating-linear-gradient(0deg,transparent 0 23px,rgba(255,255,255,.03) 23px 24px),
+  repeating-linear-gradient(90deg,transparent 0 47px,rgba(255,255,255,.05) 47px 48px);}
+.note{position:absolute;height:16px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.note.sel{background:var(--accent)}            /* 선택/현재 트랙 = 포인트 */
+.note.mute{background:#55565A}                 /* 그 외 트랙 = 그레이 */
+.wave{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:3px;padding:0 24px}
+.wave i{flex:1;background:var(--text-mid);border-radius:2px;opacity:.85;max-width:5px}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.staff{position:absolute;left:0;right:0;height:80px;}
+.staff .ln{position:absolute;left:24px;right:24px;height:1px;background:rgba(255,255,255,.18)}
+.notehead{position:absolute;width:13px;height:10px;border-radius:50%;background:var(--text-hi);transform:rotate(-20deg)}
+.callout{display:flex;gap:12px;padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r-md);background:var(--bg-surface);margin-top:18px}
+.callout .k{flex:0 0 auto;color:var(--accent);font-weight:700}
+.callout p{margin:0;color:var(--text-mid);font-size:13.5px}
+.principles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+footer{padding:40px 0 70px;color:var(--text-lo);font-size:13px}
+@media(max-width:760px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .s-left,.s-right{display:none}
+  .nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="logo">
+      <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="40" height="40" rx="10" fill="#1D1D1F"/>
+        <path d="M7 24c3 0 3-8 6-8s3 12 6 12 3-16 6-16 3 10 6 10" stroke="#F2A65A" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        <path d="M27 8l6 6-3 3-6-6 3-3z" fill="#F5F5F6"/>
+      </svg>
+      Sculptone
+    </div>
+    <nav class="nav">
+      <a href="#foundations">Foundations</a>
+      <a href="#color">Color</a>
+      <a href="#type">Typography</a>
+      <a href="#components">Components</a>
+      <a href="#screens">Screens</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Design Guide · v0.2</div>
+    <h1>Sculptone</h1>
+    <p>작곡 · 연주 · 채보를 하나의 흐름으로 잇는 음악 워크스페이스.<br>
+       <span class="tagline">소리를 깎아 형태를 만든다.</span></p>
+    <div class="pill-row">
+      <span class="pill"><b>Theme</b> Monochrome (흑백)</span>
+      <span class="pill"><b>Point</b> Copper 1색</span>
+      <span class="pill"><b>Type</b> Inter / JetBrains Mono</span>
+      <span class="pill"><b>Screens</b> Compose · Play · Transcribe</span>
+    </div>
+  </div>
+</div>
+
+<section id="foundations">
+  <div class="wrap">
+    <div class="sec-label">01 — Foundations</div>
+    <h2>디자인 원칙</h2>
+    <p class="sub">흑백 그레이스케일을 바탕으로, 포인트 컬러는 단 하나(Copper)만 사용해 시선을 집중시킵니다.</p>
+    <div class="principles">
+      <div class="card"><h4>① 흑백 우선 (Mono-first)</h4><p>표면·텍스트·컨트롤은 모두 무채색. 색은 정보가 아니라 위계를 위한 것입니다.</p></div>
+      <div class="card"><h4>② 단일 포인트 (One Accent)</h4><p>Copper는 "지금 작업 중인 대상"과 1차 액션에만. 색이 적을수록 그 한 번이 강해집니다.</p></div>
+      <div class="card"><h4>③ 집중 (Focus)</h4><p>어두운 캔버스가 콘텐츠(노트·파형·악보)를 무대 위로 끌어올립니다. UI는 배경으로 물러납니다.</p></div>
+      <div class="card"><h4>④ 연속성 (Flow)</h4><p>작곡→연주→채보가 같은 토큰·컴포넌트를 공유해 모드 전환의 인지 비용을 최소화합니다.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="color">
+  <div class="wrap">
+    <div class="sec-label">02 — Color</div>
+    <h2>색상 시스템</h2>
+    <p class="sub">무채색 6단계로 깊이를 만들고, 유채색은 둘 뿐입니다 — 포인트 <b>Copper</b>(브랜드·액션)와 기능 전용 <b>Record Red</b>(녹음 표시).</p>
+
+    <h3>Neutral · 무채색 스케일</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#070708"></div><div class="meta"><div class="name">Inset</div><div class="hex mono">#070708</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0C0C0D"></div><div class="meta"><div class="name">Base</div><div class="hex mono">#0C0C0D</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#141415"></div><div class="meta"><div class="name">Surface</div><div class="hex mono">#141415</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#1D1D1F"></div><div class="meta"><div class="name">Elevated</div><div class="hex mono">#1D1D1F</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#2A2A2C"></div><div class="meta"><div class="name">Border</div><div class="hex mono">#2A2A2C</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#3A3A3D"></div><div class="meta"><div class="name">Border Strong</div><div class="hex mono">#3A3A3D</div></div></div>
+    </div>
+
+    <h3>Point &amp; Functional · 유채색 (단 2색)</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#F2A65A"></div><div class="meta"><div class="name">Copper · Point</div><div class="hex mono">#F2A65A</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#C97E3C"></div><div class="meta"><div class="name">Copper Deep · hover</div><div class="hex mono">#C97E3C</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#E2685F"></div><div class="meta"><div class="name">Record · 녹음 전용</div><div class="hex mono">#E2685F</div></div></div>
+    </div>
+
+    <h3>Text</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#0C0C0D;display:grid;place-items:center;color:#F5F5F6;font-weight:700">Aa</div><div class="meta"><div class="name">High</div><div class="hex mono">#F5F5F6</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0C0C0D;display:grid;place-items:center;color:#A6A6AA;font-weight:700">Aa</div><div class="meta"><div class="name">Mid</div><div class="hex mono">#A6A6AA</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0C0C0D;display:grid;place-items:center;color:#6B6B70;font-weight:700">Aa</div><div class="meta"><div class="name">Low</div><div class="hex mono">#6B6B70</div></div></div>
+    </div>
+
+    <div class="callout"><span class="k">규칙</span><p>Copper는 한 화면에 1~2곳까지만 — 1차 액션 버튼과 현재 선택 대상. 그 외 강조·상태·수치는 모두 무채색 명도로 처리합니다. Record Red는 오직 녹음 상태에만 등장합니다.</p></div>
+  </div>
+</section>
+
+<section id="type">
+  <div class="wrap">
+    <div class="sec-label">03 — Typography</div>
+    <h2>타이포그래피</h2>
+    <p class="sub">UI 전반은 <b>Inter</b>, 시간·BPM·수치 등 정렬이 중요한 값은 <b>JetBrains Mono</b>. 악보 기보는 SMuFL 폰트(예: Bravura)를 별도 사용합니다.</p>
+    <div class="card" style="padding:8px 24px">
+      <div class="type-row"><div class="type-spec"><b>Display</b>Inter 800 · 48/1.05</div><div style="font-size:40px;font-weight:800;letter-spacing:-.03em">소리를 깎다</div></div>
+      <div class="type-row"><div class="type-spec"><b>H2 / Title</b>Inter 700 · 28/1.2</div><div style="font-size:26px;font-weight:700">Compose Workspace</div></div>
+      <div class="type-row"><div class="type-spec"><b>H3 / Section</b>Inter 600 · 16/1.4</div><div style="font-size:16px;font-weight:600">Track Inspector</div></div>
+      <div class="type-row"><div class="type-spec"><b>Body</b>Inter 400 · 15/1.6</div><div style="font-size:15px;color:var(--text-mid)">파형을 분석해 음표로 변환합니다.</div></div>
+      <div class="type-row"><div class="type-spec"><b>Caption</b>Inter 500 · 12/1.4</div><div style="font-size:12px;color:var(--text-lo);text-transform:uppercase;letter-spacing:.1em">Quantize · 1/16</div></div>
+      <div class="type-row"><div class="type-spec"><b>Numeric</b>JetBrains 500 · mono</div><div class="mono" style="font-size:18px;color:var(--text-hi)">02:14.06 · 128 BPM · 4/4</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="components">
+  <div class="wrap">
+    <div class="sec-label">04 — Components</div>
+    <h2>핵심 컴포넌트</h2>
+    <p class="sub">모드(작곡·연주·채보) 전반에서 재사용되는 공통 컨트롤. 무채색 기본 + 포인트는 1차 액션에만.</p>
+
+    <h3>Buttons</h3>
+    <div class="demo">
+      <button class="btn btn-primary">▶ 내보내기</button>
+      <button class="btn btn-secondary">트랙 추가</button>
+      <button class="btn btn-ghost">취소</button>
+      <button class="btn btn-danger">● 녹음 삭제</button>
+    </div>
+
+    <h3>Transport · 재생/녹음 바</h3>
+    <div class="demo">
+      <div class="transport">
+        <button class="tbtn" title="처음으로">⏮</button>
+        <button class="tbtn play" title="재생">▶</button>
+        <button class="tbtn" title="정지">⏹</button>
+        <button class="tbtn rec" title="녹음">●</button>
+        <span class="time mono">02:14.06 / 03:40.00</span>
+      </div>
+    </div>
+
+    <h3>Sliders · Tabs · Badges</h3>
+    <div class="demo">
+      <input class="slider" type="range" aria-label="volume">
+      <div class="tabs">
+        <span class="tab active">Compose</span>
+        <span class="tab">Play</span>
+        <span class="tab">Transcribe</span>
+      </div>
+      <span class="badge dot badge-rec">REC</span>
+      <span class="badge dot badge-neutral">Saved</span>
+    </div>
+
+    <div class="grid3" style="margin-top:22px">
+      <div class="card"><h4>Spacing</h4><p class="mono" style="color:var(--text-lo)">4 · 8 · 12 · 16 · 24 · 32</p><p>모든 간격은 4px 그리드 배수.</p></div>
+      <div class="card"><h4>Radius</h4><p class="mono" style="color:var(--text-lo)">6 · 10 · 16 · pill</p><p>패널 16, 컨트롤 10, 칩 6.</p></div>
+      <div class="card"><h4>Elevation</h4><p class="mono" style="color:var(--text-lo)">surface→elevated→shadow</p><p>명도 상승 + 부드러운 그림자.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-label">05 — Screens</div>
+    <h2>핵심 화면 레이아웃</h2>
+    <p class="sub">세 화면은 동일한 셸(좌측 소스 패널 · 중앙 캔버스 · 우측 인스펙터 · 상단 툴바 · 하단 트랜스포트)을 공유하고, 중앙 캔버스만 모드에 맞게 바뀝니다.</p>
+
+    <h3>① 작곡 / 악보 에디터 — Piano Roll</h3>
+    <div class="screen">
+      <div class="s-chrome">
+        <span class="s-dot" style="background:#3A3A3D"></span><span class="s-dot" style="background:#3A3A3D"></span><span class="s-dot" style="background:#3A3A3D"></span>
+        <span class="s-title">Sculptone — Untitled Project · Compose</span>
+      </div>
+      <div class="s-toolbar">
+        <span class="mini-btn accent">Compose</span><span class="mini-btn">Play</span><span class="mini-btn">Transcribe</span>
+        <span style="margin-left:auto" class="mono">128 BPM · 4/4 · Quantize 1/16</span>
+      </div>
+      <div class="s-body">
+        <div class="s-left">
+          <p class="track-lbl">Tracks</p>
+          <div class="track sel"><span class="sw" style="background:var(--accent)"></span> Piano</div>
+          <div class="track"><span class="sw" style="background:#55565A"></span> Bass</div>
+          <div class="track"><span class="sw" style="background:#55565A"></span> Strings</div>
+          <div class="track"><span class="sw" style="background:#55565A"></span> Drums</div>
+        </div>
+        <div class="s-main">
+          <div class="roll"></div>
+          <div class="note sel" style="left:48px;top:120px;width:90px"></div>
+          <div class="note sel" style="left:144px;top:96px;width:46px"></div>
+          <div class="note sel" style="left:192px;top:144px;width:90px"></div>
+          <div class="note mute" style="left:288px;top:72px;width:140px"></div>
+          <div class="note mute" style="left:240px;top:168px;width:46px"></div>
+          <div class="note sel" style="left:336px;top:120px;width:46px"></div>
+          <div class="playhead" style="left:300px"></div>
+        </div>
+        <div class="s-right">
+          <p class="track-lbl">Inspector</p>
+          <div style="font-size:12px;color:var(--text-mid);line-height:2.2">
+            Velocity <span class="mono" style="float:right;color:var(--text-hi)">96</span><br>
+            Length <span class="mono" style="float:right;color:var(--text-hi)">1/8</span><br>
+            Octave <span class="mono" style="float:right;color:var(--text-hi)">C4</span>
+          </div>
+          <input class="slider" style="width:100%;margin-top:14px" type="range">
+        </div>
+      </div>
+    </div>
+    <div class="callout"><span class="k">패턴</span><p>현재 트랙(Piano)의 노트만 Copper, 나머지 트랙 노트는 그레이로 가라앉힙니다. 재생 헤드도 Copper 발광선 — 화면당 포인트는 이 둘로 한정됩니다.</p></div>
+
+    <h3>② 연주 / 플레이어 — Performance</h3>
+    <div class="screen">
+      <div class="s-chrome">
+        <span class="s-dot" style="background:#3A3A3D"></span><span class="s-dot" style="background:#3A3A3D"></span><span class="s-dot" style="background:#3A3A3D"></span>
+        <span class="s-title">Sculptone — Untitled Project · Play</span>
+      </div>
+      <div class="s-toolbar">
+        <span class="mini-btn">Compose</span><span class="mini-btn accent">Play</span><span class="mini-btn">Transcribe</span>
+        <span style="margin-left:auto" class="mono">02:14.06 / 03:40.00</span>
+      </div>
+      <div class="s-body">
+        <div class="s-left">
+          <p class="track-lbl">Mixer</p>
+          <div class="track"><span class="sw" style="background:#55565A"></span> Piano</div>
+          <input class="slider" style="width:100%;margin:2px 0 12px" type="range">
+          <div class="track"><span class="sw" style="background:#55565A"></span> Bass</div>
+          <input class="slider" style="width:100%;margin:2px 0 12px" type="range">
+        </div>
+        <div class="s-main" style="display:flex;flex-direction:column">
+          <div style="flex:1;position:relative">
+            <div class="wave" id="wave"></div>
+            <div class="playhead" style="left:55%"></div>
+          </div>
+          <div style="height:64px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;background:var(--bg-surface)">
+            <div class="transport" style="transform:scale(.92)">
+              <button class="tbtn">⏮</button>
+              <button class="tbtn play">▶</button>
+              <button class="tbtn">⏹</button>
+              <button class="tbtn rec">●</button>
+            </div>
+          </div>
+        </div>
+        <div class="s-right">
+          <p class="track-lbl">Output</p>
+          <div style="font-size:12px;color:var(--text-mid);line-height:2.2">
+            Tempo <span class="mono" style="float:right;color:var(--text-hi)">128</span><br>
+            Key <span class="mono" style="float:right;color:var(--text-hi)">C maj</span><br>
+            Peak <span class="mono" style="float:right;color:var(--text-hi)">-3.2 dB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="callout"><span class="k">패턴</span><p>파형은 무채색(밝은 그레이), 재생 헤드와 재생 버튼만 Copper. 색이 아니라 명도와 발광으로 "지금 위치"를 읽게 합니다.</p></div>
+
+    <h3>③ 채보 — Audio → Score</h3>
+    <div class="screen">
+      <div class="s-chrome">
+        <span class="s-dot" style="background:#3A3A3D"></span><span class="s-dot" style="background:#3A3A3D"></span><span class="s-dot" style="background:#3A3A3D"></span>
+        <span class="s-title">Sculptone — Untitled Project · Transcribe</span>
+      </div>
+      <div class="s-toolbar">
+        <span class="mini-btn">Compose</span><span class="mini-btn">Play</span><span class="mini-btn accent">Transcribe</span>
+        <span style="margin-left:auto" class="mini-btn accent">⚡ 분석 시작</span>
+      </div>
+      <div class="s-body" style="flex-direction:column">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-surface);font-size:12px;color:var(--text-mid)">
+          <span class="badge dot badge-neutral">Source</span> recording_01.wav
+          <span style="margin-left:auto" class="mono" style="color:var(--text-lo)">96% confidence</span>
+        </div>
+        <div style="height:90px;position:relative;background:var(--bg-inset);border-bottom:1px solid var(--border)">
+          <div class="wave" id="wave2"></div>
+        </div>
+        <div style="flex:1;position:relative;background:var(--bg-inset);min-height:150px">
+          <div class="staff" style="top:36px">
+            <div class="ln" style="top:0"></div><div class="ln" style="top:14px"></div><div class="ln" style="top:28px"></div><div class="ln" style="top:42px"></div><div class="ln" style="top:56px"></div>
+            <div class="notehead" style="left:70px;top:42px"></div>
+            <div class="notehead" style="left:120px;top:28px"></div>
+            <div class="notehead" style="left:170px;top:14px"></div>
+            <div class="notehead" style="left:220px;top:28px"></div>
+            <div class="notehead" style="left:290px;top:7px"></div>
+            <div class="notehead" style="left:340px;top:21px"></div>
+          </div>
+          <div style="position:absolute;left:16px;bottom:12px;font-size:11px;color:var(--text-lo)" class="mono">→ 변환된 악보 · 클릭하여 수정 가능</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout"><span class="k">패턴</span><p>위(소스 파형, 그레이) → 아래(생성된 악보, 흰 음표)로 "깎여 나오는" 수직 흐름. 액션 버튼만 Copper로 다음 단계를 가리킵니다.</p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Sculptone Design Guide · v0.2 — 소리를 깎아 형태를 만든다. &nbsp;|&nbsp; Monochrome · Point: Copper
+  </div>
+</footer>
+
+<script>
+function fillWave(id,n){
+  const el=document.getElementById(id); if(!el)return;
+  let h='';
+  for(let i=0;i<n;i++){
+    const v=12+Math.abs(Math.sin(i*0.5))*40+Math.random()*22;
+    h+=`<i style="height:${v}px"></i>`;
+  }
+  el.innerHTML=h;
+}
+fillWave('wave',90);
+fillWave('wave2',90);
+</script>
+</body>
+</html>
