@@ -32,7 +32,7 @@ export function Tabs({ items, active, onChange }: Props) {
               cursor: it.disabled ? 'not-allowed' : 'pointer',
               opacity: it.disabled ? 0.4 : 1,
               background: selected ? 'var(--accent)' : 'transparent',
-              color: selected ? '#1a1206' : 'var(--text-mid)',
+              color: selected ? 'var(--on-accent)' : 'var(--text-mid)',
             }}
           >
             {it.label}
