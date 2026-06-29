@@ -9,6 +9,13 @@ vi.mock('tone', () => ({
   start: vi.fn().mockResolvedValue(undefined),
 }))
 
+// PatchLibrary를 mock해 fake-indexeddb 없이 SoundDesignPanel 테스트 격리
+vi.mock('../PatchLibrary', () => ({
+  PatchLibrary: ({ trackId }: { trackId: string; currentSound: unknown }) => (
+    <div data-testid="patch-library-mock" data-track-id={trackId} />
+  ),
+}))
+
 // createInstrumentFromSound → preview만 사용, Tone 초기화 방지
 vi.mock('@sculptone/sound-engine', () => ({
   listPresets: vi.fn(() => [
@@ -179,5 +186,28 @@ describe('SoundDesignPanel', () => {
     render(<SoundDesignPanel />)
     await userEvent.click(screen.getByRole('button', { name: /preview sound/i }))
     expect(vi.mocked(Tone.start)).toHaveBeenCalled()
+  })
+})
+
+describe('SoundDesignPanel — PatchLibrary 통합', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
+
+  it('patch 모드에서 PatchLibrary(mock)가 렌더된다', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    expect(screen.getByTestId('patch-library-mock')).toBeInTheDocument()
+  })
+
+  it('preset 모드에서 PatchLibrary가 렌더되지 않는다', () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    // 기본 트랙은 preset sound
+    render(<SoundDesignPanel />)
+    expect(screen.queryByTestId('patch-library-mock')).not.toBeInTheDocument()
   })
 })

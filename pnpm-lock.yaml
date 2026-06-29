@@ -69,6 +69,9 @@ importers:
       vite:
         specifier: ^5.4.0
         version: 5.4.21
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
 
   packages/score-model:
     dependencies:

@@ -4,6 +4,7 @@ import { updateTrackSound, createDefaultPatch } from '@sculptone/score-model'
 import { listPresets, createInstrumentFromSound } from '@sculptone/sound-engine'
 import type { Sound } from '@sculptone/score-model'
 import type { CSSProperties, ChangeEvent } from 'react'
+import { PatchLibrary } from './PatchLibrary'
 
 const PRESETS = listPresets()
 
@@ -290,6 +291,9 @@ export function SoundDesignPanel() {
           >
             Use Preset Instead
           </button>
+
+          {/* Patch Library — 저장/불러오기/삭제 */}
+          <PatchLibrary trackId={soundPanelTrackId} currentSound={sound} />
         </>
       )}
 
