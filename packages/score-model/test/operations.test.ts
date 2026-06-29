@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { createEmptyProject, createTrack, createNote } from '../src/factory'
-import { addTrack, addNote, updateNote, removeNote, updateTrackMixer } from '../src/operations'
+import { addTrack, addNote, updateNote, removeNote, updateTrackMixer, updateTrackSound } from '../src/operations'
+import type { Sound } from '../src/schema'
 
 describe('operations (immutable)', () => {
   it('addTrack는 새 배열을 반환하고 원본을 변경하지 않는다', () => {
@@ -44,5 +45,29 @@ describe('operations (immutable)', () => {
     const next = updateTrackMixer(p, t.id, { muted: true })
     expect(next.tracks[0]!.mixer.muted).toBe(true)
     expect(next.tracks[0]!.mixer.volume).toBe(0.8)
+  })
+})
+
+describe('updateTrackSound', () => {
+  it('지정 트랙의 sound를 교체하고 다른 필드와 다른 트랙은 유지한다', () => {
+    const t1 = createTrack('Piano')
+    const t2 = createTrack('Bass')
+    let p = addTrack(addTrack(createEmptyProject('S'), t1), t2)
+    const newSound: Sound = { kind: 'preset', presetId: 'synth-lead' }
+    p = updateTrackSound(p, t1.id, newSound)
+    expect(p.tracks.find((t) => t.id === t1.id)!.sound).toEqual(newSound)
+    // 다른 트랙은 기본값 유지
+    expect(p.tracks.find((t) => t.id === t2.id)!.sound).toEqual({ kind: 'preset', presetId: 'acoustic-piano' })
+    // 기타 필드 보존
+    expect(p.tracks.find((t) => t.id === t1.id)!.notes).toHaveLength(0)
+    expect(p.tracks.find((t) => t.id === t1.id)!.mixer.volume).toBe(0.8)
+  })
+
+  it('존재하지 않는 trackId는 no-op — 프로젝트를 그대로 반환한다', () => {
+    const t = createTrack('Piano')
+    const p = addTrack(createEmptyProject('S'), t)
+    const newSound: Sound = { kind: 'preset', presetId: 'synth-lead' }
+    const result = updateTrackSound(p, 'no-such-id', newSound)
+    expect(result.tracks[0]!.sound).toEqual({ kind: 'preset', presetId: 'acoustic-piano' })
   })
 })

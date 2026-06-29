@@ -1,4 +1,4 @@
-import type { Project, Track, Note, Mixer } from './schema'
+import type { Project, Track, Note, Mixer, Sound } from './schema'
 
 function mapTrack(p: Project, trackId: string, fn: (t: Track) => Track): Project {
   return {
@@ -44,4 +44,8 @@ export function updateTrackMixer(
   patch: Partial<Mixer>,
 ): Project {
   return mapTrack(p, trackId, (t) => ({ ...t, mixer: { ...t.mixer, ...patch } }))
+}
+
+export function updateTrackSound(p: Project, trackId: string, sound: Sound): Project {
+  return mapTrack(p, trackId, (t) => ({ ...t, sound }))
 }
