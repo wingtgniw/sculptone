@@ -13,6 +13,7 @@ import { MixerPanel } from '../play/MixerPanel'
 import { useMidi } from '../midi/useMidi'
 import { useRecording } from '../midi/useRecording'
 import { MidiDeviceSelect } from '../midi/MidiDeviceSelect'
+import { NotationView } from '../notation/NotationView'
 
 const TABS = [
   { id: 'compose',    label: 'Compose' },
@@ -24,10 +25,12 @@ const region: CSSProperties = { background: 'var(--bg-surface)', border: '1px so
 export function AppShell() {
   useAutosave()
 
-  const activeMode    = useStore((s) => s.activeMode)
-  const setMode       = useStore((s) => s.setMode)
-  const tempo         = useStore((s) => s.project.transport.tempo)
-  const timeSignature = useStore((s) => s.project.transport.timeSignature)
+  const activeMode     = useStore((s) => s.activeMode)
+  const setMode        = useStore((s) => s.setMode)
+  const composeView    = useStore((s) => s.composeView)
+  const setComposeView = useStore((s) => s.setComposeView)
+  const tempo          = useStore((s) => s.project.transport.tempo)
+  const timeSignature  = useStore((s) => s.project.transport.timeSignature)
   const { play, stop, getSeconds } = useAudio()
 
   const { handleMidiMessage } = useRecording()
@@ -40,6 +43,36 @@ export function AppShell() {
       <div style={{ ...region, display: 'flex', alignItems: 'center', gap: 12, padding: '0 14px' }}>
         <strong style={{ letterSpacing: '-0.02em' }}>Sculptone</strong>
         <Tabs items={TABS} active={activeMode} onChange={(id) => setMode(id as Mode)} />
+        {activeMode === 'compose' && (
+          <div style={{ display: 'flex', gap: 2 }}>
+            <button
+              aria-pressed={composeView === 'roll'}
+              onClick={() => setComposeView('roll')}
+              style={{
+                font: 'inherit', fontSize: 11, fontWeight: 600,
+                padding: '3px 10px', borderRadius: 'var(--r-sm) 0 0 var(--r-sm)',
+                border: '1px solid var(--border)', cursor: 'pointer',
+                background: composeView === 'roll' ? 'var(--accent)' : 'var(--bg-elevated)',
+                color: composeView === 'roll' ? 'var(--on-accent)' : 'var(--text-mid)',
+              }}
+            >
+              Roll
+            </button>
+            <button
+              aria-pressed={composeView === 'score'}
+              onClick={() => setComposeView('score')}
+              style={{
+                font: 'inherit', fontSize: 11, fontWeight: 600,
+                padding: '3px 10px', borderRadius: '0 var(--r-sm) var(--r-sm) 0',
+                border: '1px solid var(--border)', cursor: 'pointer',
+                background: composeView === 'score' ? 'var(--accent)' : 'var(--bg-elevated)',
+                color: composeView === 'score' ? 'var(--on-accent)' : 'var(--text-mid)',
+              }}
+            >
+              Score
+            </button>
+          </div>
+        )}
         <FileMenu />
         <MidiDeviceSelect
           devices={devices}
@@ -59,10 +92,15 @@ export function AppShell() {
           {activeMode === 'compose' && <TracksPanel />}
         </div>
         <div style={{ background: 'var(--bg-inset)', position: 'relative', overflow: 'auto' }}>
-          {activeMode === 'compose' && (
+          {activeMode === 'compose' && composeView === 'roll' && (
             <div style={{ position: 'relative' }}>
               <PianoRoll />
               <Playhead getSeconds={getSeconds} />
+            </div>
+          )}
+          {activeMode === 'compose' && composeView === 'score' && (
+            <div style={{ height: '100%', overflowY: 'auto' }}>
+              <NotationView />
             </div>
           )}
           {activeMode === 'play' && (

@@ -18,6 +18,9 @@ vi.mock('../midi/useMidi', () => ({
 vi.mock('../midi/useRecording', () => ({
   useRecording: () => ({ handleMidiMessage: () => {} }),
 }))
+vi.mock('../notation/NotationView', () => ({
+  NotationView: () => <div data-testid="notation-view" />,
+}))
 
 describe('AppShell compose mode', () => {
   beforeEach(() => { useStore.setState({ activeMode: 'compose' }) })

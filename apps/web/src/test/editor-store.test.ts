@@ -57,4 +57,15 @@ describe('editor store', () => {
     useStore.getState().setRecording(false)
     expect(useStore.getState().isRecording).toBe(false)
   })
+
+  it('초기 composeView는 "roll"이다', () => {
+    expect(useStore.getState().composeView).toBe('roll')
+  })
+
+  it('setComposeView("score") → composeView가 "score"로 변경된다', () => {
+    useStore.getState().setComposeView('score')
+    expect(useStore.getState().composeView).toBe('score')
+    useStore.getState().setComposeView('roll')
+    expect(useStore.getState().composeView).toBe('roll')
+  })
 })

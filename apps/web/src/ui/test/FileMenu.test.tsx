@@ -18,9 +18,10 @@ vi.mock('@sculptone/score-model', async (importOrig) => {
   const orig = await importOrig<typeof import('@sculptone/score-model')>()
   return {
     ...orig,
-    projectToMidi:  vi.fn().mockReturnValue(new Uint8Array([0])),
-    midiToProject:  vi.fn().mockReturnValue(orig.createEmptyProject('Imported')),
-    serializeProject: vi.fn().mockReturnValue('{}'),
+    projectToMidi:     vi.fn().mockReturnValue(new Uint8Array([0])),
+    midiToProject:     vi.fn().mockReturnValue(orig.createEmptyProject('Imported')),
+    serializeProject:  vi.fn().mockReturnValue('{}'),
+    projectToMusicXML: vi.fn().mockReturnValue('<?xml version="1.0"?>'),  // NEW
   }
 })
 
@@ -111,5 +112,20 @@ describe('FileMenu', () => {
     expect(downloadText).toHaveBeenCalledOnce()
     const [, filename] = (downloadText as ReturnType<typeof vi.fn>).mock.calls[0]!
     expect(filename).toMatch(/\.json$/)
+  })
+
+  it('"Export MusicXML" 버튼이 렌더된다', () => {
+    render(<FileMenu />)
+    expect(screen.getByRole('button', { name: /export musicxml/i })).toBeInTheDocument()
+  })
+
+  it('Export MusicXML 클릭 시 downloadText가 .musicxml 파일명으로 호출된다', async () => {
+    const { downloadText } = await import('../../io/files')
+    render(<FileMenu />)
+    await userEvent.click(screen.getByRole('button', { name: /export musicxml/i }))
+    expect(downloadText).toHaveBeenCalledOnce()
+    const [, filename, mime] = (downloadText as ReturnType<typeof vi.fn>).mock.calls[0]!
+    expect(filename).toMatch(/\.musicxml$/)
+    expect(mime).toBe('application/vnd.recordare.musicxml+xml')
   })
 })

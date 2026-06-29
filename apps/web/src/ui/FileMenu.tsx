@@ -1,6 +1,9 @@
 import { useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 import { useStore } from '../state/store'
-import { createEmptyProject, createTrack, addTrack, projectToMidi, midiToProject, serializeProject } from '@sculptone/score-model'
+import {
+  createEmptyProject, createTrack, addTrack,
+  projectToMidi, midiToProject, serializeProject, projectToMusicXML,
+} from '@sculptone/score-model'
 import { downloadBytes, downloadText, readFileAsArrayBuffer } from '../io/files'
 
 const btnStyle: CSSProperties = {
@@ -38,6 +41,12 @@ export function FileMenu() {
     downloadText(json, filename, 'application/json')
   }
 
+  const handleExportMusicXML = () => {
+    const xml      = projectToMusicXML(project)
+    const filename = `${project.metadata.title.replace(/[^a-z0-9]/gi, '_') || 'untitled'}.musicxml`
+    downloadText(xml, filename, 'application/vnd.recordare.musicxml+xml')
+  }
+
   const handleImportMidi = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -66,6 +75,9 @@ export function FileMenu() {
       </button>
       <button style={btnStyle} onClick={handleExportJson}>
         Export JSON
+      </button>
+      <button style={btnStyle} onClick={handleExportMusicXML}>
+        Export MusicXML
       </button>
       <button
         style={btnStyle}
