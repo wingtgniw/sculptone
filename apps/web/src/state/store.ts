@@ -36,6 +36,17 @@ export interface AppState {
   _lastEditAt: number
   selectedTrackId: string
   selectedNoteId: string | null
+  /**
+   * 다중 선택된 노트 id 배열. 단일 선택 시 [id], 없으면 [].
+   * 항상 selectedNoteId === selectedNoteIds[0] ?? null 불변식을 유지한다.
+   */
+  selectedNoteIds: string[]
+  /** Shift-클릭: id를 selectedNoteIds에 추가하거나 제거한다. selectedNoteId 미러를 갱신. */
+  toggleNoteSelection: (id: string) => void
+  /** selectedNoteIds를 통째로 교체한다. selectedNoteId 미러를 갱신. */
+  setSelectedNoteIds: (ids: string[]) => void
+  /** selectedNoteIds와 selectedNoteId를 모두 비운다. */
+  clearNoteSelection: () => void
   quantizeDenom: number
   isPlaying: boolean
   isRecording: boolean
@@ -114,6 +125,13 @@ export interface AppState {
    * undo 스택에 기록하지 않는다 — setClipboardNote는 history를 건드리지 않음.
    */
   clipboardNote: Note | null
+  /**
+   * 다중 클립보드 노트 배열. 항상 clipboardNote === clipboardNotes[0] ?? null 불변식.
+   * setClipboardNote 호환: 단일 노트 세팅 시 clipboardNotes = [note].
+   */
+  clipboardNotes: Note[]
+  /** clipboardNotes를 통째로 교체한다. clipboardNote 미러를 갱신. */
+  setClipboardNotes: (notes: Note[]) => void
   setClipboardNote: (note: Note | null) => void
 }
 
@@ -133,13 +151,11 @@ function correctTrackId(project: Project, trackId: string): string {
 }
 
 /**
- * selectedNoteId가 project의 어느 트랙에도 없으면 null로 보정한다.
+ * selectedNoteIds 중 project에 존재하지 않는 id를 필터링한다.
  * undo/redo 후 노트가 사라졌을 때 사용.
  */
-function correctNoteId(project: Project, noteId: string | null): string | null {
-  if (noteId === null) return null
-  const exists = project.tracks.some((t) => t.notes.some((n) => n.id === noteId))
-  return exists ? noteId : null
+function correctNoteIds(project: Project, noteIds: string[]): string[] {
+  return noteIds.filter((id) => project.tracks.some((t) => t.notes.some((n) => n.id === id)))
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -149,6 +165,7 @@ export const useStore = create<AppState>((set) => ({
   _lastEditAt: 0,
   selectedTrackId: project0.tracks[0]!.id,
   selectedNoteId: null,
+  selectedNoteIds: [],
   quantizeDenom: 16,
   isPlaying: false,
   isRecording: false,
@@ -189,6 +206,7 @@ export const useStore = create<AppState>((set) => ({
       _lastEditAt: 0,
       selectedTrackId: project.tracks[0]?.id ?? '',
       selectedNoteId: null,
+      selectedNoteIds: [],
     }),
 
   undo: () =>
@@ -196,12 +214,14 @@ export const useStore = create<AppState>((set) => ({
       if (!canUndo(s.history)) return {}
       const newHistory = historyUndo(s.history)
       const project = newHistory.present
+      const ids = correctNoteIds(project, s.selectedNoteIds)
       return {
         history: newHistory,
         project,
         _lastEditAt: 0,
         selectedTrackId: correctTrackId(project, s.selectedTrackId),
-        selectedNoteId: correctNoteId(project, s.selectedNoteId),
+        selectedNoteId: ids[0] ?? null,
+        selectedNoteIds: ids,
       }
     }),
 
@@ -210,17 +230,20 @@ export const useStore = create<AppState>((set) => ({
       if (!canRedo(s.history)) return {}
       const newHistory = historyRedo(s.history)
       const project = newHistory.present
+      const ids = correctNoteIds(project, s.selectedNoteIds)
       return {
         history: newHistory,
         project,
         _lastEditAt: 0,
         selectedTrackId: correctTrackId(project, s.selectedTrackId),
-        selectedNoteId: correctNoteId(project, s.selectedNoteId),
+        selectedNoteId: ids[0] ?? null,
+        selectedNoteIds: ids,
       }
     }),
 
-  selectTrack: (trackId) => set({ selectedTrackId: trackId, selectedNoteId: null }),
-  selectNote: (noteId) => set({ selectedNoteId: noteId }),
+  selectTrack: (trackId) =>
+    set({ selectedTrackId: trackId, selectedNoteId: null, selectedNoteIds: [] }),
+  selectNote: (noteId) => set({ selectedNoteId: noteId, selectedNoteIds: noteId ? [noteId] : [] }),
   setQuantizeDenom: (denom) => set({ quantizeDenom: denom }),
   setPlaying: (playing) => set({ isPlaying: playing }),
   setRecording: (recording) => set({ isRecording: recording }),
@@ -232,5 +255,16 @@ export const useStore = create<AppState>((set) => ({
   toggleShortcuts: () => set((s) => ({ showShortcuts: !s.showShortcuts })),
   endEdit: () => set({ _lastEditAt: 0 }),
   clipboardNote: null,
-  setClipboardNote: (note) => set({ clipboardNote: note }),
+  clipboardNotes: [],
+  setClipboardNote: (note) => set({ clipboardNote: note, clipboardNotes: note ? [note] : [] }),
+  setClipboardNotes: (notes) => set({ clipboardNotes: notes, clipboardNote: notes[0] ?? null }),
+  toggleNoteSelection: (id) =>
+    set((s) => {
+      const ids = s.selectedNoteIds.includes(id)
+        ? s.selectedNoteIds.filter((x) => x !== id)
+        : [...s.selectedNoteIds, id]
+      return { selectedNoteIds: ids, selectedNoteId: ids[0] ?? null }
+    }),
+  setSelectedNoteIds: (ids) => set({ selectedNoteIds: ids, selectedNoteId: ids[0] ?? null }),
+  clearNoteSelection: () => set({ selectedNoteIds: [], selectedNoteId: null }),
 }))

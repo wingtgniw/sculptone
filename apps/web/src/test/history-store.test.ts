@@ -264,6 +264,81 @@ describe('undo/redo 직후 setProject 코얼레싱 방지', () => {
   })
 })
 
+// ── undo/redo 선택 불변식 유지 (Fix A) ───────────────────────
+
+describe('undo/redo 선택 불변식 유지 (Fix A)', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
+
+  it('undo() 후 head(A)가 사라지고 B만 남을 때 selectedNoteId === B.id 불변식 유지', () => {
+    vi.useFakeTimers()
+    useStore.setState(useStore.getInitialState(), true)
+
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+
+    // Step 1: 노트 B를 별도 history step으로 추가
+    const noteB = createNote({ pitch: 62, start: 480, duration: 480, velocity: 100 })
+    const p1 = addNote(s.project, tid, noteB)
+    s.setProject(p1)
+
+    // 코얼레싱 방지
+    vi.advanceTimersByTime(401)
+
+    // Step 2: 노트 A를 추가하고 [A, B] 선택 (head=A)
+    const noteA = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    const p2 = addNote(p1, tid, noteA)
+    s.setProject(p2)
+    s.setSelectedNoteIds([noteA.id, noteB.id]) // head = A
+
+    expect(useStore.getState().selectedNoteIds).toEqual([noteA.id, noteB.id])
+    expect(useStore.getState().selectedNoteId).toBe(noteA.id)
+
+    // Step 3: undo → A가 제거되고 B만 남음
+    useStore.getState().undo()
+
+    const afterUndo = useStore.getState()
+    // correctNoteIds로 A가 필터링되고 B만 남음
+    expect(afterUndo.selectedNoteIds).toEqual([noteB.id])
+    // 불변식: selectedNoteId === selectedNoteIds[0] (= B.id), null이 아님
+    expect(afterUndo.selectedNoteId).toBe(noteB.id)
+
+    vi.useRealTimers()
+  })
+
+  it('redo() 후 selectedNoteId가 ids[0]와 동기화된다 (redo 대칭)', () => {
+    vi.useFakeTimers()
+    useStore.setState(useStore.getInitialState(), true)
+
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+
+    // history: [initial] → [B 있음]
+    const noteB = createNote({ pitch: 62, start: 480, duration: 480, velocity: 100 })
+    const p1 = addNote(s.project, tid, noteB)
+    s.setProject(p1)
+
+    // undo → [initial]으로
+    useStore.getState().undo()
+
+    // desync 상태 시뮬레이션: selectedNoteIds=[noteB.id] but selectedNoteId=null
+    // (old buggy code가 남길 수 있는 상태)
+    useStore.setState({ selectedNoteIds: [noteB.id], selectedNoteId: null })
+
+    // redo → [B 있음]으로
+    useStore.getState().redo()
+
+    const afterRedo = useStore.getState()
+    // B가 project에 존재하므로 ids=[B.id]
+    expect(afterRedo.selectedNoteIds).toEqual([noteB.id])
+    // 불변식: selectedNoteId === ids[0] (= B.id), null이 아님
+    expect(afterRedo.selectedNoteId).toBe(noteB.id)
+
+    vi.useRealTimers()
+  })
+})
+
 // ── redo ─────────────────────────────────────────────────────
 
 describe('redo 액션', () => {
