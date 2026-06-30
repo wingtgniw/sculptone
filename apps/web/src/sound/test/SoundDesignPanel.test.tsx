@@ -211,3 +211,170 @@ describe('SoundDesignPanel — PatchLibrary 통합', () => {
     expect(screen.queryByTestId('patch-library-mock')).not.toBeInTheDocument()
   })
 })
+
+describe('SoundDesignPanel — Oscillator 섹션', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    vi.clearAllMocks()
+  })
+
+  function openPatchPanel() {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+    }))
+    s.setSoundPanelTrackId(trackId)
+  }
+
+  it('patch 모드에서 Oscillator type 드롭다운이 표시된다', () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('combobox', { name: /oscillator type/i })).toBeInTheDocument()
+  })
+
+  it('Oscillator type 변경 시 sound.oscillator.type이 갱신된다', async () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: /oscillator type/i }),
+      'square',
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(
+      updated.sound.kind === 'patch' && updated.sound.oscillator?.type
+    ).toBe('square')
+  })
+
+  it('patch 모드에서 Oscillator Detune 슬라이더가 표시된다', () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('slider', { name: /oscillator detune/i })).toBeInTheDocument()
+  })
+
+  it('Detune 슬라이더 변경 시 sound.oscillator.detune이 갱신된다', () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    fireEvent.change(
+      screen.getByRole('slider', { name: /oscillator detune/i }),
+      { target: { value: '200' } },
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(
+      updated.sound.kind === 'patch' && updated.sound.oscillator?.detune
+    ).toBe(200)
+  })
+})
+
+describe('SoundDesignPanel — LFO 섹션', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    vi.clearAllMocks()
+  })
+
+  function openPatchPanel() {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(updateTrackSound(s.project, trackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+    }))
+    s.setSoundPanelTrackId(trackId)
+  }
+
+  it('patch 모드에서 LFO Enable 체크박스가 표시된다', () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    expect(screen.getByRole('checkbox', { name: /lfo enable/i })).toBeInTheDocument()
+  })
+
+  it('LFO Enable 체크박스 활성화 시 target·rate·depth 컨트롤이 나타난다', async () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('checkbox', { name: /lfo enable/i }))
+    expect(screen.getByRole('combobox', { name: /lfo target/i })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /lfo rate/i })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /lfo depth/i })).toBeInTheDocument()
+  })
+
+  it('LFO Enable 체크박스 활성화 시 sound.lfo가 기본값으로 설정된다', async () => {
+    openPatchPanel()
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('checkbox', { name: /lfo enable/i }))
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.lfo).toEqual({ target: 'amplitude', rate: 1, depth: 0.5 })
+  })
+
+  it('LFO rate 슬라이더 변경 시 sound.lfo.rate가 갱신된다', async () => {
+    openPatchPanel()
+    const s = useStore.getState()
+    // LFO 있는 patch로 설정
+    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      lfo: { target: 'filter', rate: 1, depth: 0.5 },
+    }))
+    render(<SoundDesignPanel />)
+    fireEvent.change(
+      screen.getByRole('slider', { name: /lfo rate/i }),
+      { target: { value: '5' } },
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.lfo?.rate).toBe(5)
+  })
+
+  it('LFO target select 변경 시 sound.lfo.target이 갱신된다', async () => {
+    openPatchPanel()
+    const s = useStore.getState()
+    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      lfo: { target: 'amplitude', rate: 1, depth: 0.5 },
+    }))
+    render(<SoundDesignPanel />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: /lfo target/i }),
+      'filter',
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.lfo?.target).toBe('filter')
+  })
+
+  it('LFO depth 슬라이더 변경 시 sound.lfo.depth가 갱신된다', () => {
+    openPatchPanel()
+    const s = useStore.getState()
+    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      lfo: { target: 'amplitude', rate: 1, depth: 0.5 },
+    }))
+    render(<SoundDesignPanel />)
+    fireEvent.change(
+      screen.getByRole('slider', { name: /lfo depth/i }),
+      { target: { value: '0.8' } },
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.lfo?.depth).toBeCloseTo(0.8)
+  })
+
+  it('LFO Enable 체크박스 비활성화 시 sound.lfo가 undefined가 된다', async () => {
+    openPatchPanel()
+    const s = useStore.getState()
+    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
+      kind: 'patch' as const,
+      engine: 'synth' as const,
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      lfo: { target: 'pitch', rate: 2, depth: 0.3 },
+    }))
+    render(<SoundDesignPanel />)
+    await userEvent.click(screen.getByRole('checkbox', { name: /lfo enable/i }))
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.lfo).toBeUndefined()
+  })
+})

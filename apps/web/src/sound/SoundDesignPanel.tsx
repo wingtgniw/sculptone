@@ -142,6 +142,61 @@ export function SoundDesignPanel() {
             </select>
           </section>
 
+          {/* Oscillator */}
+          <section>
+            <p style={{ ...labelStyle, margin: '0 0 10px' }}>Oscillator</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={labelStyle}>Waveform</label>
+                <select
+                  aria-label="Oscillator type"
+                  value={sound.oscillator?.type ?? 'sine'}
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                    updatePatch({
+                      oscillator: {
+                        type: e.target.value as 'sine' | 'square' | 'sawtooth' | 'triangle',
+                        detune: sound.oscillator?.detune ?? 0,
+                      },
+                    })
+                  }
+                  style={selectStyle}
+                >
+                  <option value="sine">Sine</option>
+                  <option value="square">Square</option>
+                  <option value="sawtooth">Sawtooth</option>
+                  <option value="triangle">Triangle</option>
+                </select>
+              </div>
+              <div style={sliderRowStyle}>
+                <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}>
+                  Detune
+                </label>
+                <input
+                  type="range"
+                  aria-label="Oscillator detune"
+                  min={-1200}
+                  max={1200}
+                  step={1}
+                  value={sound.oscillator?.detune ?? 0}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    updatePatch({
+                      oscillator: {
+                        type: sound.oscillator?.type ?? 'sine',
+                        detune: Number(e.target.value),
+                      },
+                    })
+                  }
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
+                  {(sound.oscillator?.detune ?? 0) > 0
+                    ? `+${sound.oscillator?.detune ?? 0}¢`
+                    : `${sound.oscillator?.detune ?? 0}¢`}
+                </span>
+              </div>
+            </div>
+          </section>
+
           {/* ADSR */}
           <section>
             <p style={{ ...labelStyle, margin: '0 0 10px' }}>Envelope</p>
@@ -222,6 +277,88 @@ export function SoundDesignPanel() {
                       </span>
                     </div>
                   ))}
+                </div>
+              )
+            })()}
+          </section>
+
+          {/* LFO */}
+          <section>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+              <p style={{ ...labelStyle, margin: 0, flex: 1 }}>LFO</p>
+              <input
+                type="checkbox"
+                aria-label="LFO enable"
+                checked={!!sound.lfo}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  updatePatch({
+                    lfo: e.target.checked
+                      ? { target: 'amplitude', rate: 1, depth: 0.5 }
+                      : undefined,
+                  })
+                }
+              />
+            </div>
+            {sound.lfo && (() => {
+              const lfo = sound.lfo
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <select
+                    aria-label="LFO target"
+                    value={lfo.target}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                      updatePatch({ lfo: { ...lfo, target: e.target.value as 'filter' | 'pitch' | 'amplitude' } })
+                    }
+                    style={selectStyle}
+                  >
+                    <option value="filter">Filter Cutoff</option>
+                    <option value="pitch">Pitch (Vibrato)</option>
+                    <option value="amplitude">Amplitude (Tremolo)</option>
+                  </select>
+
+                  {/* Rate */}
+                  <div style={sliderRowStyle}>
+                    <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}>
+                      Rate
+                    </label>
+                    <input
+                      type="range"
+                      aria-label="LFO rate"
+                      min={0.1}
+                      max={20}
+                      step={0.1}
+                      value={lfo.rate}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updatePatch({ lfo: { ...lfo, rate: Math.max(0.1, Number(e.target.value)) } })
+                      }
+                      style={{ flex: 1, accentColor: 'var(--accent)' }}
+                    />
+                    <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
+                      {lfo.rate.toFixed(1)}Hz
+                    </span>
+                  </div>
+
+                  {/* Depth */}
+                  <div style={sliderRowStyle}>
+                    <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}>
+                      Depth
+                    </label>
+                    <input
+                      type="range"
+                      aria-label="LFO depth"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={lfo.depth}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updatePatch({ lfo: { ...lfo, depth: Number(e.target.value) } })
+                      }
+                      style={{ flex: 1, accentColor: 'var(--accent)' }}
+                    />
+                    <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
+                      {Math.round(lfo.depth * 100)}%
+                    </span>
+                  </div>
                 </div>
               )
             })()}
