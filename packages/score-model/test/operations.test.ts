@@ -8,6 +8,7 @@ import {
   updateTrackMixer,
   updateTrackSound,
   moveNotes,
+  quantizeNotes,
 } from '../src/operations'
 import type { Sound } from '../src/schema'
 
@@ -180,5 +181,116 @@ describe('updateTrackSound', () => {
     const newSound: Sound = { kind: 'preset', presetId: 'synth-lead' }
     const result = updateTrackSound(p, 'no-such-id', newSound)
     expect(result.tracks[0]!.sound).toEqual({ kind: 'preset', presetId: 'acoustic-piano' })
+  })
+})
+
+// ── quantizeNotes ─────────────────────────────────────────────
+
+describe('quantizeNotes', () => {
+  function makeProject() {
+    const t1 = createTrack('Piano')
+    const t2 = createTrack('Bass')
+    const nA = createNote({ pitch: 60, start: 250, duration: 480, velocity: 100 })
+    const nB = createNote({ pitch: 62, start: 430, duration: 240, velocity: 80 })
+    const nC = createNote({ pitch: 64, start: 0, duration: 120, velocity: 90 })
+    let p = addTrack(addTrack(createEmptyProject('S'), t1), t2)
+    p = addNote(p, t1.id, nA)
+    p = addNote(p, t1.id, nB)
+    p = addNote(p, t2.id, nC)
+    return { p, t1, t2, nA, nB, nC }
+  }
+
+  it('ids=[] → 동일 참조 반환 (early return)', () => {
+    const { p, t1 } = makeProject()
+    const result = quantizeNotes(p, t1.id, [], 120)
+    expect(result).toBe(p)
+  })
+
+  it('gridTicks=0 → 동일 참조 반환 (no-op)', () => {
+    const { p, t1, nA } = makeProject()
+    const result = quantizeNotes(p, t1.id, [nA.id], 0)
+    expect(result).toBe(p)
+  })
+
+  it('gridTicks<0 → 동일 참조 반환 (no-op)', () => {
+    const { p, t1, nA } = makeProject()
+    const result = quantizeNotes(p, t1.id, [nA.id], -1)
+    expect(result).toBe(p)
+  })
+
+  it('단일 노트 스냅: start=250, gridTicks=120 → round(250/120)*120 = 2*120 = 240', () => {
+    // 250/120 = 2.083... → round = 2 → 2*120 = 240
+    const { p, t1, nA } = makeProject()
+    const result = quantizeNotes(p, t1.id, [nA.id], 120)
+    const moved = result.tracks.find((t) => t.id === t1.id)!.notes.find((n) => n.id === nA.id)!
+    expect(moved.start).toBe(240)
+  })
+
+  it('정확히 중간값(half-grid): start=180, gridTicks=120 → round(1.5)*120 = 2*120 = 240', () => {
+    // JS Math.round(1.5) = 2 (반올림)
+    const t = createTrack('T')
+    const n = createNote({ pitch: 60, start: 180, duration: 480, velocity: 100 })
+    const proj = addNote(addTrack(createEmptyProject('S'), t), t.id, n)
+    const result = quantizeNotes(proj, t.id, [n.id], 120)
+    expect(result.tracks[0]!.notes[0]!.start).toBe(240)
+  })
+
+  it('이미 정렬된 노트: start=480, gridTicks=120 → 480 (변경 없음)', () => {
+    const t = createTrack('T')
+    const n = createNote({ pitch: 60, start: 480, duration: 480, velocity: 100 })
+    const proj = addNote(addTrack(createEmptyProject('S'), t), t.id, n)
+    const result = quantizeNotes(proj, t.id, [n.id], 120)
+    expect(result.tracks[0]!.notes[0]!.start).toBe(480)
+  })
+
+  it('복수 노트 동시 스냅: nA.start=250→240, nB.start=430→480', () => {
+    // 250/120=2.083 → 2*120=240 / 430/120=3.583 → 4*120=480
+    const { p, t1, nA, nB } = makeProject()
+    const result = quantizeNotes(p, t1.id, [nA.id, nB.id], 120)
+    const notes = result.tracks.find((t) => t.id === t1.id)!.notes
+    expect(notes.find((n) => n.id === nA.id)!.start).toBe(240)
+    expect(notes.find((n) => n.id === nB.id)!.start).toBe(480)
+  })
+
+  it('ids에 없는 노트는 변경되지 않는다', () => {
+    const { p, t1, nA, nB } = makeProject()
+    // nA만 퀀타이즈 → nB는 start=430 유지
+    const result = quantizeNotes(p, t1.id, [nA.id], 120)
+    const notes = result.tracks.find((t) => t.id === t1.id)!.notes
+    expect(notes.find((n) => n.id === nB.id)!.start).toBe(430)
+  })
+
+  it('다른 트랙의 노트는 변경되지 않는다', () => {
+    const { p, t1, t2, nA, nC } = makeProject()
+    const result = quantizeNotes(p, t1.id, [nA.id], 120)
+    const t2Notes = result.tracks.find((t) => t.id === t2.id)!.notes
+    expect(t2Notes.find((n) => n.id === nC.id)!.start).toBe(0)
+  })
+
+  it('불변성: 원본 project가 변경되지 않는다', () => {
+    const { p, t1, nA } = makeProject()
+    const origStart = p.tracks.find((t) => t.id === t1.id)!.notes.find((n) => n.id === nA.id)!.start
+    quantizeNotes(p, t1.id, [nA.id], 120)
+    expect(p.tracks.find((t) => t.id === t1.id)!.notes.find((n) => n.id === nA.id)!.start).toBe(
+      origStart,
+    )
+  })
+
+  it('duration은 변경되지 않는다 (start만 스냅)', () => {
+    const { p, t1, nA } = makeProject()
+    const origDuration = p.tracks
+      .find((t) => t.id === t1.id)!
+      .notes.find((n) => n.id === nA.id)!.duration
+    const result = quantizeNotes(p, t1.id, [nA.id], 120)
+    const moved = result.tracks.find((t) => t.id === t1.id)!.notes.find((n) => n.id === nA.id)!
+    expect(moved.duration).toBe(origDuration)
+  })
+
+  it('start=0인 노트는 0으로 유지된다 (0이 이미 grid-aligned)', () => {
+    const t = createTrack('T')
+    const n = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    const proj = addNote(addTrack(createEmptyProject('S'), t), t.id, n)
+    const result = quantizeNotes(proj, t.id, [n.id], 120)
+    expect(result.tracks[0]!.notes[0]!.start).toBe(0)
   })
 })

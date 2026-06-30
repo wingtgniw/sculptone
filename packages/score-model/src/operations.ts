@@ -79,3 +79,29 @@ export function moveNotes(
     ),
   }))
 }
+
+/**
+ * 지정 트랙에서 ids에 포함된 노트들의 start를 gridTicks 배수로 스냅한다 (불변).
+ *
+ * - start = Math.round(start / gridTicks) * gridTicks
+ * - duration은 변경하지 않는다.
+ * - ids에 없는 노트·다른 트랙은 변경하지 않는다.
+ * - ids.length === 0 이거나 gridTicks <= 0 이면 동일 참조 early return (no-op).
+ *
+ * 스냅 공식은 apps/web/src/compose/quantize.ts의 snap()과 동일하다.
+ */
+export function quantizeNotes(
+  p: Project,
+  trackId: string,
+  ids: string[],
+  gridTicks: number,
+): Project {
+  if (ids.length === 0 || gridTicks <= 0) return p
+  const idSet = new Set(ids)
+  return mapTrack(p, trackId, (t) => ({
+    ...t,
+    notes: t.notes.map((n) =>
+      idSet.has(n.id) ? { ...n, start: Math.round(n.start / gridTicks) * gridTicks } : n,
+    ),
+  }))
+}
