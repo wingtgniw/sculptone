@@ -141,6 +141,30 @@ describe('타깃 태그 가드 — Space 예시', () => {
   })
 })
 
+// ── Q → 'quantize' ───────────────────────────────────────────
+
+describe("Q → 'quantize'", () => {
+  it('소문자 q는 quantize를 반환한다', () => {
+    expect(matchShortcut(ev('q'))).toBe('quantize')
+  })
+
+  it('대문자 Q(CapsLock, shiftKey=false)는 quantize를 반환한다', () => {
+    expect(matchShortcut(ev('Q', { shiftKey: false }))).toBe('quantize')
+  })
+
+  it('Shift+Q(shiftKey=true)는 null을 반환한다', () => {
+    expect(matchShortcut(ev('Q', { shiftKey: true }))).toBeNull()
+  })
+
+  it('Ctrl+Q는 null을 반환한다 (수식어 가드)', () => {
+    expect(matchShortcut(ev('q', { ctrlKey: true }))).toBeNull()
+  })
+
+  it('INPUT 포커스 시 q는 null을 반환한다 (타깃 가드)', () => {
+    expect(matchShortcut(ev('q', { targetTag: 'INPUT' }))).toBeNull()
+  })
+})
+
 // ── 기타 ──────────────────────────────────────────────────────
 
 describe('기타', () => {

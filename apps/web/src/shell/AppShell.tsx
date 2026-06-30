@@ -20,6 +20,7 @@ import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 import { ShortcutsHelp } from './ShortcutsHelp'
 import { matchShortcut } from './shortcuts'
 import { useClipboard } from '../compose/useClipboard'
+import { quantizeSelection } from '../compose/quantizeSelection'
 
 const TABS = [
   { id: 'compose', label: 'Compose' },
@@ -114,6 +115,14 @@ export function AppShell() {
           e.preventDefault()
           redo()
         }
+        // Ctrl/Cmd+A: 현재 트랙 전체 노트 선택
+        // !e.repeat: 키 홀드 오토리피트 시 매 프레임 리렌더 폭주 방지 (Fix 1)
+        if (mod && !e.shiftKey && k === 'a' && !e.repeat) {
+          e.preventDefault()
+          // 드래그 중 Ctrl+A는 group-move wrong-state 유발 → 차단 (Fix 3)
+          if (useStore.getState().isDragging) return
+          useStore.getState().selectAllInTrack()
+        }
       }
 
       // ── 단일 키 단축키: matchShortcut이 가드와 매칭을 통합 처리 ──
@@ -143,6 +152,10 @@ export function AppShell() {
         setMetronomeEnabled(!metronomeEnabled)
       } else if (action === 'help') {
         toggleShortcuts()
+      } else if (action === 'quantize') {
+        // 드래그 중 Q는 노트 위치를 뒤틀 수 있으므로 차단 (Fix 3)
+        if (useStore.getState().isDragging) return
+        quantizeSelection()
       }
     }
 

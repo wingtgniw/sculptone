@@ -6,11 +6,12 @@
  *   'record'     — R (수식어 없음, 대소문자 무관)
  *   'metronome'  — M (수식어 없음, 대소문자 무관)
  *   'help'       — ? (Shift+/)
+ *   'quantize'   — Q (수식어 없음, 대소문자 무관)
  *   null         — 해당 없음 (수식어 키 있음 / 입력 필드 포커스 / 기타 키)
  *
  * 사이드 이펙트 없음. preventDefault는 호출부(AppShell)에서 담당한다.
  */
-export type ShortcutAction = 'play' | 'record' | 'metronome' | 'help'
+export type ShortcutAction = 'play' | 'record' | 'metronome' | 'help' | 'quantize'
 
 export function matchShortcut(e: KeyboardEvent): ShortcutAction | null {
   // ── 타깃 가드: 입력 필드에서는 단축키를 발동하지 않는다 ──
@@ -42,6 +43,9 @@ export function matchShortcut(e: KeyboardEvent): ShortcutAction | null {
   // ?: 미국 키보드에서 Shift+/ → key='?', shiftKey=true.
   // 위에서 ctrlKey/metaKey/altKey가 false임을 확인했으므로 shiftKey만 true인 상태.
   if (e.key === '?') return 'help'
+
+  // Q: !shiftKey 조건으로 Shift+Q는 null. R/M 패턴과 일관.
+  if (e.key.toLowerCase() === 'q' && !e.shiftKey) return 'quantize'
 
   return null
 }

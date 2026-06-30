@@ -14,6 +14,8 @@ const SHORTCUTS: { keys: string; desc: string }[] = [
   { keys: 'Ctrl+X / Cmd+X', desc: '노트 오려내기' },
   { keys: 'Ctrl+V / Cmd+V', desc: '노트 붙여넣기 (재생 위치에)' },
   { keys: 'Ctrl+D / Cmd+D', desc: '노트 복제 (+1마디)' },
+  { keys: 'Ctrl+A / Cmd+A', desc: '현재 트랙 모든 노트 전체 선택' },
+  { keys: 'Q', desc: '선택 노트 퀀타이즈 (현재 그리드)' },
   { keys: '?', desc: '이 도움말 열기 / 닫기' },
 ]
 

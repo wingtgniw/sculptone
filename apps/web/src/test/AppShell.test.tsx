@@ -321,4 +321,97 @@ describe('AppShell', () => {
     fireEvent(document.body, event)
     expect(event.defaultPrevented).toBe(true)
   })
+
+  // ── Fix 1: Ctrl/Cmd+A e.repeat 가드 ──────────────────────────────────
+
+  it('e.repeat=true Ctrl+A는 selectAllInTrack을 호출하지 않는다 (오토리피트 가드)', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const n1 = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    const n2 = createNote({ pitch: 62, start: 480, duration: 480, velocity: 100 })
+    act(() => {
+      s.setProject(addNote(addNote(s.project, tid, n1), tid, n2))
+    })
+    render(<AppShell />)
+    // repeat=true → 선택 미변경
+    fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true, repeat: true })
+    expect(useStore.getState().selectedNoteIds).toHaveLength(0)
+  })
+
+  it('e.repeat=false Ctrl+A는 트랙 전체 노트를 선택한다', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const n1 = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    const n2 = createNote({ pitch: 62, start: 480, duration: 480, velocity: 100 })
+    act(() => {
+      s.setProject(addNote(addNote(s.project, tid, n1), tid, n2))
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true, repeat: false })
+    expect(useStore.getState().selectedNoteIds).toHaveLength(2)
+  })
+
+  // ── Fix 3: isDragging 가드 — Ctrl+A ───────────────────────────────────
+
+  it('isDragging=true 시 Ctrl+A는 selectAllInTrack을 호출하지 않는다 (드래그 가드)', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const n = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    act(() => {
+      s.setProject(addNote(s.project, tid, n))
+      useStore.getState().setDragging(true)
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true })
+    // isDragging=true → 선택 미변경 (여전히 빈 배열)
+    expect(useStore.getState().selectedNoteIds).toHaveLength(0)
+  })
+
+  it('isDragging=false 시 Ctrl+A는 정상적으로 전체 선택한다', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const n = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    act(() => {
+      s.setProject(addNote(s.project, tid, n))
+      useStore.getState().setDragging(false)
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true })
+    expect(useStore.getState().selectedNoteIds).toHaveLength(1)
+  })
+
+  // ── Fix 3: isDragging 가드 — Q (quantize) ─────────────────────────────
+
+  it('isDragging=true 시 Q 키는 quantize를 적용하지 않는다 (드래그 가드)', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    // start=1: 퀀타이즈 그리드(1/16=120ticks)에 맞지 않는 위치
+    const n = createNote({ pitch: 60, start: 1, duration: 480, velocity: 100 })
+    act(() => {
+      s.setProject(addNote(s.project, tid, n))
+      s.selectNote(n.id)
+      useStore.getState().setDragging(true)
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: 'q' })
+    // isDragging=true → project 미변경 (start 여전히 1)
+    const note = useStore.getState().project.tracks.find((t) => t.id === tid)?.notes[0]
+    expect(note?.start).toBe(1)
+  })
+
+  it('isDragging=false 시 Q 키는 quantize를 정상 적용한다', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const n = createNote({ pitch: 60, start: 1, duration: 480, velocity: 100 })
+    act(() => {
+      s.setProject(addNote(s.project, tid, n))
+      s.selectNote(n.id)
+      useStore.getState().setDragging(false)
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: 'q' })
+    // isDragging=false → quantize 적용됨 (start≠1)
+    const note = useStore.getState().project.tracks.find((t) => t.id === tid)?.notes[0]
+    expect(note?.start).not.toBe(1)
+  })
 })
