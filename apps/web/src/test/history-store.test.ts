@@ -339,6 +339,47 @@ describe('undo/redo 선택 불변식 유지 (Fix A)', () => {
   })
 })
 
+// ── Fix 2: correctNoteIds — 존재하는 id 순서 보존 + 비존재 id 제거 ──────
+
+describe('correctNoteIds 동작 (undo/redo를 통해 검증)', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
+
+  it('undo 후 selectedNoteIds에서 존재하지 않는 id는 제거되고 존재하는 id는 순서대로 유지된다', () => {
+    vi.useFakeTimers()
+    useStore.setState(useStore.getInitialState(), true)
+
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+
+    // Step 1: n1 추가 (past=[init], present=p1)
+    const n1 = createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })
+    const p1 = addNote(s.project, tid, n1)
+    s.setProject(p1)
+
+    vi.advanceTimersByTime(401)
+
+    // Step 2: n2 추가 (past=[init, p1], present=p2)
+    const n2 = createNote({ pitch: 62, start: 480, duration: 480, velocity: 100 })
+    const p2 = addNote(p1, tid, n2)
+    useStore.getState().setProject(p2)
+
+    // 순서 섞어 선택: head=n2, tail=n1
+    useStore.getState().setSelectedNoteIds([n2.id, n1.id])
+    expect(useStore.getState().selectedNoteIds).toEqual([n2.id, n1.id])
+
+    // undo → p1 (n2 없음)
+    // correctNoteIds(p1, [n2.id, n1.id]) → n2 제거, n1 보존 → [n1.id]
+    useStore.getState().undo()
+
+    expect(useStore.getState().selectedNoteIds).toEqual([n1.id])
+    expect(useStore.getState().selectedNoteId).toBe(n1.id)
+
+    vi.useRealTimers()
+  })
+})
+
 // ── redo ─────────────────────────────────────────────────────
 
 describe('redo 액션', () => {

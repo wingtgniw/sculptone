@@ -47,6 +47,12 @@ export interface AppState {
   setSelectedNoteIds: (ids: string[]) => void
   /** selectedNoteIds와 selectedNoteId를 모두 비운다. */
   clearNoteSelection: () => void
+  /**
+   * 현재 selectedTrackId 트랙의 모든 노트 id를 selectedNoteIds로 설정한다.
+   * selectedNoteId 미러(= ids[0] ?? null)를 자동 갱신한다.
+   * 트랙 없거나 노트 0개이면 빈 선택(selectedNoteIds=[], selectedNoteId=null).
+   */
+  selectAllInTrack: () => void
   quantizeDenom: number
   isPlaying: boolean
   isRecording: boolean
@@ -116,6 +122,13 @@ export interface AppState {
   setShowShortcuts: (show: boolean) => void
   toggleShortcuts: () => void
   /**
+   * 드래그 조작 중 플래그.
+   * PianoRoll / VelocityLane의 dragRef/boxSelRef/dragVelRef 가 활성인 동안 true.
+   * AppShell 전역 Q / Ctrl+A 단축키는 이 플래그가 true이면 무시한다.
+   */
+  isDragging: boolean
+  setDragging: (v: boolean) => void
+  /**
    * 현재 편집 제스처 경계를 닫는다.
    * _lastEditAt을 0으로 리셋해 다음 setProject 호출이 새 undo 스텝이 되게 한다.
    */
@@ -153,9 +166,11 @@ function correctTrackId(project: Project, trackId: string): string {
 /**
  * selectedNoteIds 중 project에 존재하지 않는 id를 필터링한다.
  * undo/redo 후 노트가 사라졌을 때 사용.
+ * O(N+M): 모든 노트 id를 Set으로 한 번만 수집 후 filter.
  */
 function correctNoteIds(project: Project, noteIds: string[]): string[] {
-  return noteIds.filter((id) => project.tracks.some((t) => t.notes.some((n) => n.id === id)))
+  const idSet = new Set(project.tracks.flatMap((t) => t.notes.map((n) => n.id)))
+  return noteIds.filter((id) => idSet.has(id))
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -253,6 +268,8 @@ export const useStore = create<AppState>((set) => ({
   showShortcuts: false,
   setShowShortcuts: (show) => set({ showShortcuts: show }),
   toggleShortcuts: () => set((s) => ({ showShortcuts: !s.showShortcuts })),
+  isDragging: false,
+  setDragging: (v) => set({ isDragging: v }),
   endEdit: () => set({ _lastEditAt: 0 }),
   clipboardNote: null,
   clipboardNotes: [],
@@ -267,4 +284,10 @@ export const useStore = create<AppState>((set) => ({
     }),
   setSelectedNoteIds: (ids) => set({ selectedNoteIds: ids, selectedNoteId: ids[0] ?? null }),
   clearNoteSelection: () => set({ selectedNoteIds: [], selectedNoteId: null }),
+  selectAllInTrack: () =>
+    set((s) => {
+      const track = s.project.tracks.find((t) => t.id === s.selectedTrackId)
+      const ids = track?.notes.map((n) => n.id) ?? []
+      return { selectedNoteIds: ids, selectedNoteId: ids[0] ?? null }
+    }),
 }))
