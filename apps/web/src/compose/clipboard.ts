@@ -53,3 +53,49 @@ export function pasteNoteParams(
     velocity: clipNote.velocity,
   }
 }
+
+/**
+ * 여러 노트 붙여넣기(paste) 파라미터를 반환한다.
+ *
+ * - clipNotes를 start 기준 오름차순 정렬한다.
+ * - 첫 번째 노트 start를 origin으로 삼아 앵커에 정박: anchoredStart = max(0, snap(anchorTick, gridTicks)).
+ * - 각 노트: start = max(0, anchoredStart + (note.start - origin))
+ *   → 상대 위치가 보존되며 모든 start >= 0이 보장된다.
+ * - gridTicks <= 0 이면 스냅 없이 anchorTick 그대로.
+ * - 빈 배열 → 빈 배열.
+ * - id는 반환하지 않음 — 호출부에서 createNote()로 새 id를 할당한다.
+ */
+export function pasteNotesParams(
+  clipNotes: Note[],
+  anchorTick: number,
+  gridTicks: number,
+): Omit<Note, 'id'>[] {
+  if (clipNotes.length === 0) return []
+  const sorted = [...clipNotes].sort((a, b) => a.start - b.start)
+  const origin = sorted[0]!.start
+  const anchoredStart = Math.max(0, snap(anchorTick, gridTicks))
+  return sorted.map((n) => ({
+    pitch: n.pitch,
+    start: Math.max(0, anchoredStart + (n.start - origin)),
+    duration: n.duration,
+    velocity: n.velocity,
+  }))
+}
+
+/**
+ * 여러 노트 복제(duplicate) 파라미터를 반환한다.
+ *
+ * - 각 노트: start = max(0, note.start + barTicksValue)
+ * - pitch, duration, velocity = 원본과 동일.
+ * - 입력 순서를 유지한다 (정렬 없음 — 호출부가 이미 원하는 순서로 전달).
+ * - 빈 배열 → 빈 배열.
+ * - id는 반환하지 않음 — 호출부에서 createNote()로 새 id를 할당한다.
+ */
+export function duplicateNotesParams(notes: Note[], barTicksValue: number): Omit<Note, 'id'>[] {
+  return notes.map((n) => ({
+    pitch: n.pitch,
+    start: Math.max(0, n.start + barTicksValue),
+    duration: n.duration,
+    velocity: n.velocity,
+  }))
+}
