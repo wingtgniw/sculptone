@@ -18,7 +18,7 @@ describe('MidiDeviceSelect', () => {
         selectDevice={() => {}}
         isSupported={true}
         accessError={null}
-      />
+      />,
     )
     expect(screen.getByRole('option', { name: 'Piano' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Synth' })).toBeInTheDocument()
@@ -33,7 +33,7 @@ describe('MidiDeviceSelect', () => {
         selectDevice={selectDevice}
         isSupported={true}
         accessError={null}
-      />
+      />,
     )
     await userEvent.selectOptions(screen.getByRole('combobox', { name: /midi device/i }), 'dev-1')
     expect(selectDevice).toHaveBeenCalledWith('dev-1')
@@ -47,7 +47,7 @@ describe('MidiDeviceSelect', () => {
         selectDevice={() => {}}
         isSupported={true}
         accessError={null}
-      />
+      />,
     )
     expect(screen.getByText(/장치 없음/)).toBeInTheDocument()
   })
@@ -60,7 +60,7 @@ describe('MidiDeviceSelect', () => {
         selectDevice={() => {}}
         isSupported={false}
         accessError={null}
-      />
+      />,
     )
     expect(screen.getByText(/Web MIDI 미지원/)).toBeInTheDocument()
   })
@@ -74,7 +74,7 @@ describe('MidiDeviceSelect', () => {
         selectDevice={() => {}}
         isSupported={true}
         accessError="SecurityError"
-      />
+      />,
     )
     expect(screen.getByText('MIDI 오류: SecurityError')).toBeInTheDocument()
   })
@@ -89,12 +89,9 @@ describe('MidiDeviceSelect', () => {
         selectDevice={selectDevice}
         isSupported={true}
         accessError={null}
-      />
+      />,
     )
-    await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: /midi device/i }),
-      '',
-    )
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: /midi device/i }), '')
     expect(selectDevice).toHaveBeenCalledWith(null)
   })
 })

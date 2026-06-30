@@ -1,32 +1,32 @@
 version: 2
 updates:
   # npm 생태계는 pnpm-lock.yaml을 인식한다(루트 워크스페이스 단일 락파일).
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     open-pull-requests-limit: 5
     groups:
       # 개발 의존성은 한 PR로 묶어 노이즈 감소
       dev-dependencies:
-        dependency-type: "development"
+        dependency-type: 'development'
       # 프로덕션 마이너/패치도 묶음
       prod-minor-patch:
-        dependency-type: "production"
+        dependency-type: 'production'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
     commit-message:
-      prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
 
   # GitHub Actions 버전(@v4 태그)을 자동 추적 → SHA 핀 대신 운영
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     open-pull-requests-limit: 5
     commit-message:
-      prefix: "ci(deps)"
+      prefix: 'ci(deps)'

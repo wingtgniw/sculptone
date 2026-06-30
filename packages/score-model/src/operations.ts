@@ -38,11 +38,7 @@ export function removeNote(p: Project, trackId: string, noteId: string): Project
   }))
 }
 
-export function updateTrackMixer(
-  p: Project,
-  trackId: string,
-  patch: Partial<Mixer>,
-): Project {
+export function updateTrackMixer(p: Project, trackId: string, patch: Partial<Mixer>): Project {
   return mapTrack(p, trackId, (t) => ({ ...t, mixer: { ...t.mixer, ...patch } }))
 }
 

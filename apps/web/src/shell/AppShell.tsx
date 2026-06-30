@@ -17,39 +17,45 @@ import { NotationView } from '../notation/NotationView'
 import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 
 const TABS = [
-  { id: 'compose',    label: 'Compose' },
-  { id: 'play',       label: 'Play' },
+  { id: 'compose', label: 'Compose' },
+  { id: 'play', label: 'Play' },
   { id: 'transcribe', label: 'Transcribe', disabled: true },
 ]
 const region: CSSProperties = { background: 'var(--bg-surface)', border: '1px solid var(--border)' }
 
 const undoBtnBase: CSSProperties = {
-  font: 'inherit', fontSize: 12, fontWeight: 600,
-  padding: '2px 8px', borderRadius: 'var(--r-sm)',
-  border: '1px solid var(--border)', cursor: 'pointer',
-  background: 'var(--bg-elevated)', color: 'var(--text-mid)',
+  font: 'inherit',
+  fontSize: 12,
+  fontWeight: 600,
+  padding: '2px 8px',
+  borderRadius: 'var(--r-sm)',
+  border: '1px solid var(--border)',
+  cursor: 'pointer',
+  background: 'var(--bg-elevated)',
+  color: 'var(--text-mid)',
   lineHeight: 1.4,
 }
 const undoBtnDisabled: CSSProperties = {
   ...undoBtnBase,
-  opacity: 0.35, cursor: 'not-allowed',
+  opacity: 0.35,
+  cursor: 'not-allowed',
 }
 
 export function AppShell() {
   useAutosave()
 
-  const activeMode     = useStore((s) => s.activeMode)
-  const setMode        = useStore((s) => s.setMode)
-  const composeView    = useStore((s) => s.composeView)
+  const activeMode = useStore((s) => s.activeMode)
+  const setMode = useStore((s) => s.setMode)
+  const composeView = useStore((s) => s.composeView)
   const setComposeView = useStore((s) => s.setComposeView)
-  const tempo          = useStore((s) => s.project.transport.tempo)
-  const timeSignature  = useStore((s) => s.project.transport.timeSignature)
+  const tempo = useStore((s) => s.project.transport.tempo)
+  const timeSignature = useStore((s) => s.project.transport.timeSignature)
   const { play, stop, getSeconds } = useAudio()
 
-  const undo     = useStore((s) => s.undo)
-  const redo     = useStore((s) => s.redo)
-  const canUndo  = useStore((s) => s.history.past.length > 0)
-  const canRedo  = useStore((s) => s.history.future.length > 0)
+  const undo = useStore((s) => s.undo)
+  const redo = useStore((s) => s.redo)
+  const canUndo = useStore((s) => s.history.past.length > 0)
+  const canRedo = useStore((s) => s.history.future.length > 0)
 
   const { handleMidiMessage } = useRecording()
   const { devices, selectedDeviceId, selectDevice, isSupported, accessError } =
@@ -66,9 +72,18 @@ export function AppShell() {
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
       const mod = isMac ? e.metaKey : e.ctrlKey
       const k = e.key.toLowerCase()
-      if (mod && !e.shiftKey && k === 'z') { e.preventDefault(); undo() }
-      if (mod && e.shiftKey && k === 'z') { e.preventDefault(); redo() }
-      if (!isMac && e.ctrlKey && !e.shiftKey && k === 'y') { e.preventDefault(); redo() }
+      if (mod && !e.shiftKey && k === 'z') {
+        e.preventDefault()
+        undo()
+      }
+      if (mod && e.shiftKey && k === 'z') {
+        e.preventDefault()
+        redo()
+      }
+      if (!isMac && e.ctrlKey && !e.shiftKey && k === 'y') {
+        e.preventDefault()
+        redo()
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -107,9 +122,13 @@ export function AppShell() {
               aria-pressed={composeView === 'roll'}
               onClick={() => setComposeView('roll')}
               style={{
-                font: 'inherit', fontSize: 11, fontWeight: 600,
-                padding: '3px 10px', borderRadius: 'var(--r-sm) 0 0 var(--r-sm)',
-                border: '1px solid var(--border)', cursor: 'pointer',
+                font: 'inherit',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '3px 10px',
+                borderRadius: 'var(--r-sm) 0 0 var(--r-sm)',
+                border: '1px solid var(--border)',
+                cursor: 'pointer',
                 background: composeView === 'roll' ? 'var(--accent)' : 'var(--bg-elevated)',
                 color: composeView === 'roll' ? 'var(--on-accent)' : 'var(--text-mid)',
               }}
@@ -120,9 +139,13 @@ export function AppShell() {
               aria-pressed={composeView === 'score'}
               onClick={() => setComposeView('score')}
               style={{
-                font: 'inherit', fontSize: 11, fontWeight: 600,
-                padding: '3px 10px', borderRadius: '0 var(--r-sm) var(--r-sm) 0',
-                border: '1px solid var(--border)', cursor: 'pointer',
+                font: 'inherit',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '3px 10px',
+                borderRadius: '0 var(--r-sm) var(--r-sm) 0',
+                border: '1px solid var(--border)',
+                cursor: 'pointer',
                 background: composeView === 'score' ? 'var(--accent)' : 'var(--bg-elevated)',
                 color: composeView === 'score' ? 'var(--on-accent)' : 'var(--text-mid)',
               }}
@@ -139,7 +162,10 @@ export function AppShell() {
           isSupported={isSupported}
           accessError={accessError}
         />
-        <span className="mono" style={{ marginLeft: 'auto', color: 'var(--text-mid)', fontSize: 13 }}>
+        <span
+          className="mono"
+          style={{ marginLeft: 'auto', color: 'var(--text-mid)', fontSize: 13 }}
+        >
           {tempo} BPM · {timeSignature.join('/')}
         </span>
       </div>

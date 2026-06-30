@@ -24,10 +24,7 @@ export function audibleTrackIds(project: Project): string[] {
  * audibleIds 트랙의 모든 노트를 절대 초(seconds) 기준 아이템으로 변환한다.
  * time.ts의 ticksToSeconds를 재사용.
  */
-export function buildMultiSchedule(
-  project: Project,
-  audibleIds: string[],
-): MultiScheduleItem[] {
+export function buildMultiSchedule(project: Project, audibleIds: string[]): MultiScheduleItem[] {
   const { ppq, tempo } = project.transport
   const result: MultiScheduleItem[] = []
   for (const trackId of audibleIds) {

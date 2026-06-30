@@ -6,7 +6,9 @@ import { updateTrackSound } from '@sculptone/score-model'
 import { TracksPanel } from '../TracksPanel'
 
 describe('TracksPanel', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('트랙 목록을 렌더하고 현재 트랙을 aria-current로 표시', () => {
     render(<TracksPanel />)
@@ -90,11 +92,13 @@ describe('TracksPanel', () => {
   it('patch 트랙 선택 시 프리셋 드롭다운이 없고 커스텀 패치 배지가 보인다(Fix 3)', () => {
     const s = useStore.getState()
     const trackId = s.selectedTrackId
-    s.setProject(updateTrackSound(s.project, trackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-    }))
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      }),
+    )
     render(<TracksPanel />)
     expect(screen.queryByRole('combobox', { name: /preset/i })).toBeNull()
     expect(screen.getByText(/custom patch/i)).toBeInTheDocument()

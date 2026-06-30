@@ -26,14 +26,18 @@ const FULL_PATCH: Sound = {
 describe('SoundSchema — patch 확장 유효성', () => {
   it('기존 patch({engine, envelope}만)는 여전히 유효하다(하위호환)', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
     })
     expect(result.success).toBe(true)
   })
 
   it('filter가 추가된 patch는 유효하다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
       filter: { type: 'lowpass', frequency: 1000, Q: 1 },
     })
     expect(result.success).toBe(true)
@@ -41,7 +45,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('effects(reverb)가 추가된 patch는 유효하다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'am', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'am',
+      envelope: BASE_ENV,
       effects: [{ type: 'reverb', wet: 0.4, decay: 2 }],
     })
     expect(result.success).toBe(true)
@@ -49,7 +55,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('effects(delay)가 추가된 patch는 유효하다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'fm', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'fm',
+      envelope: BASE_ENV,
       effects: [{ type: 'delay', wet: 0.3, time: 0.25, feedback: 0.5 }],
     })
     expect(result.success).toBe(true)
@@ -62,7 +70,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('잘못된 filter.type("notch")은 거부된다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
       filter: { type: 'notch', frequency: 1000, Q: 1 },
     })
     expect(result.success).toBe(false)
@@ -70,7 +80,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('알 수 없는 effect.type("chorus")은 거부된다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
       effects: [{ type: 'chorus', wet: 0.5 }],
     })
     expect(result.success).toBe(false)
@@ -78,7 +90,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('reverb.wet > 1은 거부된다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
       effects: [{ type: 'reverb', wet: 1.5, decay: 2 }],
     })
     expect(result.success).toBe(false)
@@ -86,7 +100,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('filter.frequency <= 0은 거부된다(z.number().positive())', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
       filter: { type: 'lowpass', frequency: -100, Q: 1 },
     })
     expect(result.success).toBe(false)
@@ -94,7 +110,9 @@ describe('SoundSchema — patch 확장 유효성', () => {
 
   it('delay.feedback > 1은 거부된다', () => {
     const result = SoundSchema.safeParse({
-      kind: 'patch', engine: 'synth', envelope: BASE_ENV,
+      kind: 'patch',
+      engine: 'synth',
+      envelope: BASE_ENV,
       effects: [{ type: 'delay', wet: 0.3, time: 0.25, feedback: 1.2 }],
     })
     expect(result.success).toBe(false)
@@ -145,10 +163,14 @@ describe('patch 확장 — serialize 라운드트립', () => {
 
   it('filter 있는 patch는 무손실 라운드트립', () => {
     const sound: Sound = {
-      kind: 'patch', engine: 'fm', envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
+      kind: 'patch',
+      engine: 'fm',
+      envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
       filter: { type: 'highpass', frequency: 500, Q: 0.7 },
     }
-    expect(deserializeProject(serializeProject(makeProjectWithSound(sound))).tracks[0]!.sound).toEqual(sound)
+    expect(
+      deserializeProject(serializeProject(makeProjectWithSound(sound))).tracks[0]!.sound,
+    ).toEqual(sound)
   })
 
   it('FULL_PATCH(filter + reverb + delay)는 무손실 라운드트립', () => {

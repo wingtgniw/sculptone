@@ -9,24 +9,24 @@ export interface SculptoneDB extends DBSchema {
   projects: {
     key: string
     value: {
-      id:        string
-      title:     string
+      id: string
+      title: string
       updatedAt: string
-      data:      string   // serializeProject(project) JSON 문자열
+      data: string // serializeProject(project) JSON 문자열
     }
   }
   patches: {
     key: string
     value: {
-      id:        string
-      name:      string
-      soundJson: string   // JSON.stringify(Sound)
+      id: string
+      name: string
+      soundJson: string // JSON.stringify(Sound)
       createdAt: string
     }
   }
 }
 
-export const DB_NAME    = 'sculptone'
+export const DB_NAME = 'sculptone'
 export const DB_VERSION = 2
 
 /**
@@ -53,7 +53,10 @@ export function getDB(): Promise<IDBPDatabase<SculptoneDB>> {
         // 연결이 강제 종료되면 캐시를 리셋해 다음 getDB() 시 재연결
         dbPromise = null
       },
-    }).catch((err) => { dbPromise = null; throw err })
+    }).catch((err) => {
+      dbPromise = null
+      throw err
+    })
   }
   return dbPromise
 }

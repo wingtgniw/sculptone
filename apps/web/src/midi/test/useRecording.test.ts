@@ -8,7 +8,9 @@ import { createTrack, addTrack } from '@sculptone/score-model'
 let mockSeconds = 0
 vi.mock('tone', () => ({
   getTransport: () => ({
-    get seconds() { return mockSeconds },
+    get seconds() {
+      return mockSeconds
+    },
     stop: vi.fn(),
     cancel: vi.fn(),
     start: vi.fn(),
@@ -38,7 +40,9 @@ describe('useRecording', () => {
 
   it('재생 중이지만 isRecording=false → 이벤트 무시', () => {
     const { result } = renderHook(() => useRecording())
-    act(() => { useStore.getState().setPlaying(true) })
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
     act(() => {
       result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 })
     })
@@ -57,16 +61,24 @@ describe('useRecording', () => {
 
     // noteon @0
     mockSeconds = 0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 96 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 96 })
+    })
     // noteoff @0.5
     mockSeconds = 0.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 })
+    })
 
     // stop: 위치 스냅샷 후 transport 리셋(seconds 0) → isPlaying false (하강 에지 커밋)
     mockSeconds = 1.0
-    act(() => { useStore.getState().setRecordStopSec(1.0) })
+    act(() => {
+      useStore.getState().setRecordStopSec(1.0)
+    })
     mockSeconds = 0
-    act(() => { useStore.getState().setPlaying(false) })
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
 
     const notes = useStore.getState().project.tracks[0]!.notes
     expect(notes).toHaveLength(1)
@@ -87,13 +99,19 @@ describe('useRecording', () => {
 
     // noteon @0, noteoff 없음 (계속 누름)
     mockSeconds = 0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 })
+    })
 
     // 녹음이 2.0s까지 진행됨 → stop 스냅샷 2.0, 그 후 transport.stop()이 위치를 0으로 리셋
     mockSeconds = 2.0
-    act(() => { useStore.getState().setRecordStopSec(2.0) })
+    act(() => {
+      useStore.getState().setRecordStopSec(2.0)
+    })
     mockSeconds = 0
-    act(() => { useStore.getState().setPlaying(false) })
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
 
     const notes = useStore.getState().project.tracks[0]!.notes
     expect(notes).toHaveLength(1)
@@ -105,19 +123,29 @@ describe('useRecording', () => {
     const { result } = renderHook(() => useRecording())
 
     // play 먼저
-    act(() => { useStore.getState().setPlaying(true) })
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
     // arm (상승 에지)
     mockSeconds = 0
-    act(() => { useStore.getState().setRecording(true) })
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
 
     mockSeconds = 0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 62, velocity: 90 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 62, velocity: 90 })
+    })
     mockSeconds = 0.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 62, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 62, velocity: 0 })
+    })
 
     // disarm: record off (isPlaying은 true 유지) → 하강 에지 커밋
     mockSeconds = 0.6
-    act(() => { useStore.getState().setRecording(false) })
+    act(() => {
+      useStore.getState().setRecording(false)
+    })
 
     const notes = useStore.getState().project.tracks[0]!.notes
     expect(notes).toHaveLength(1)
@@ -130,21 +158,33 @@ describe('useRecording', () => {
     const { result } = renderHook(() => useRecording())
 
     // 재생 시작, 이미 2.0s 진행된 상태
-    act(() => { useStore.getState().setPlaying(true) })
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
     mockSeconds = 2.0
     // 이제 arm (상승 에지 → recordStart = 2.0)
-    act(() => { useStore.getState().setRecording(true) })
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
 
     // arm 시점 직후 noteon @2.0 → timeSec 0
     mockSeconds = 2.0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 64, velocity: 100 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 64, velocity: 100 })
+    })
     mockSeconds = 2.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 64, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 64, velocity: 0 })
+    })
 
     mockSeconds = 3.0
-    act(() => { useStore.getState().setRecordStopSec(3.0) })
+    act(() => {
+      useStore.getState().setRecordStopSec(3.0)
+    })
     mockSeconds = 0
-    act(() => { useStore.getState().setPlaying(false) })
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
 
     const notes = useStore.getState().project.tracks[0]!.notes
     expect(notes).toHaveLength(1)
@@ -163,7 +203,9 @@ describe('useRecording', () => {
       s.setProject(addTrack(s.project, trackB))
     })
     const trackAId = useStore.getState().project.tracks[0]!.id
-    act(() => { useStore.getState().selectTrack(trackAId) })
+    act(() => {
+      useStore.getState().selectTrack(trackAId)
+    })
 
     // arm + play (recordTrackId = A 캡처)
     mockSeconds = 0
@@ -173,17 +215,27 @@ describe('useRecording', () => {
     })
 
     // 녹음 중 선택 트랙을 B로 전환
-    act(() => { useStore.getState().selectTrack(trackB.id) })
+    act(() => {
+      useStore.getState().selectTrack(trackB.id)
+    })
 
     mockSeconds = 0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 65, velocity: 100 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 65, velocity: 100 })
+    })
     mockSeconds = 0.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 65, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 65, velocity: 0 })
+    })
 
     mockSeconds = 1.0
-    act(() => { useStore.getState().setRecordStopSec(1.0) })
+    act(() => {
+      useStore.getState().setRecordStopSec(1.0)
+    })
     mockSeconds = 0
-    act(() => { useStore.getState().setPlaying(false) })
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
 
     const tracks = useStore.getState().project.tracks
     const a = tracks.find((t) => t.id === trackAId)!
@@ -201,7 +253,9 @@ describe('useRecording', () => {
       s.setProject(addTrack(s.project, trackB))
     })
     const trackAId = useStore.getState().project.tracks[0]!.id
-    act(() => { useStore.getState().selectTrack(trackAId) })
+    act(() => {
+      useStore.getState().selectTrack(trackAId)
+    })
 
     mockSeconds = 0
     act(() => {
@@ -210,9 +264,13 @@ describe('useRecording', () => {
     })
 
     mockSeconds = 0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 })
+    })
     mockSeconds = 0.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 })
+    })
 
     // 녹음 시작 트랙 A 삭제
     act(() => {
@@ -221,10 +279,14 @@ describe('useRecording', () => {
     })
 
     mockSeconds = 1.0
-    act(() => { useStore.getState().setRecordStopSec(1.0) })
+    act(() => {
+      useStore.getState().setRecordStopSec(1.0)
+    })
     mockSeconds = 0
     expect(() => {
-      act(() => { useStore.getState().setPlaying(false) })
+      act(() => {
+        useStore.getState().setPlaying(false)
+      })
     }).not.toThrow()
 
     // 남은 트랙 B에 잘못 커밋되지 않음
@@ -236,32 +298,53 @@ describe('useRecording', () => {
     const { result } = renderHook(() => useRecording())
 
     // play
-    act(() => { useStore.getState().setPlaying(true) })
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
 
     // take 1: arm → 60 → disarm (커밋 + 버퍼 클리어)
     mockSeconds = 0
-    act(() => { useStore.getState().setRecording(true) })
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
     mockSeconds = 0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 })
+    })
     mockSeconds = 0.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 })
+    })
     mockSeconds = 0.6
-    act(() => { useStore.getState().setRecording(false) })
+    act(() => {
+      useStore.getState().setRecording(false)
+    })
 
     // disarm 직후 1개 커밋되어 있어야 함
     expect(useStore.getState().project.tracks[0]!.notes).toHaveLength(1)
 
     // take 2: 재arm → 67 → disarm
     mockSeconds = 1.0
-    act(() => { useStore.getState().setRecording(true) })
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
     mockSeconds = 1.0
-    act(() => { result.current.handleMidiMessage({ type: 'noteon', pitch: 67, velocity: 100 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 67, velocity: 100 })
+    })
     mockSeconds = 1.5
-    act(() => { result.current.handleMidiMessage({ type: 'noteoff', pitch: 67, velocity: 0 }) })
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 67, velocity: 0 })
+    })
     mockSeconds = 1.6
-    act(() => { useStore.getState().setRecording(false) })
+    act(() => {
+      useStore.getState().setRecording(false)
+    })
 
-    const pitches = useStore.getState().project.tracks[0]!.notes.map((n) => n.pitch).sort((a, b) => a - b)
+    const pitches = useStore
+      .getState()
+      .project.tracks[0]!.notes.map((n) => n.pitch)
+      .sort((a, b) => a - b)
     // 유령(60 중복) 없이 정확히 [60, 67]
     expect(pitches).toEqual([60, 67])
   })
@@ -273,7 +356,9 @@ describe('useRecording', () => {
       useStore.getState().setPlaying(true)
       useStore.getState().setRecording(true)
     })
-    act(() => { useStore.getState().setPlaying(false) })
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
 
     expect(useStore.getState().isRecording).toBe(false)
   })

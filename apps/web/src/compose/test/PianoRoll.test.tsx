@@ -9,7 +9,9 @@ describe('PianoRoll', () => {
     useStore.setState(useStore.getInitialState(), true)
     const s = useStore.getState()
     const tid = s.selectedTrackId
-    s.setProject(addNote(s.project, tid, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })))
+    s.setProject(
+      addNote(s.project, tid, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 })),
+    )
   })
   it('현재 트랙의 노트를 data-note 요소로 렌더한다', () => {
     render(<PianoRoll />)

@@ -1,7 +1,7 @@
 ---
 name: 버그 리포트
 about: 잘못된 동작이나 오류를 보고합니다
-title: "[bug] "
+title: '[bug] '
 labels: bug
 ---
 

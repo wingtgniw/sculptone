@@ -30,24 +30,39 @@ export function useRecording() {
   const isPlayingRef = useRef(false)
   const isRecordingRef = useRef(false)
 
-  const isPlaying   = useStore((s) => s.isPlaying)
+  const isPlaying = useStore((s) => s.isPlaying)
   const isRecording = useStore((s) => s.isRecording)
 
-  useEffect(() => { isPlayingRef.current = isPlaying }, [isPlaying])
-  useEffect(() => { isRecordingRef.current = isRecording }, [isRecording])
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
+  useEffect(() => {
+    isRecordingRef.current = isRecording
+  }, [isRecording])
 
   /** 수집한 take를 녹음 시작 트랙에 커밋한다. */
   const commitTake = useCallback(() => {
     const events = eventsRef.current
-    if (events.length === 0) { eventsRef.current = []; return }
+    if (events.length === 0) {
+      eventsRef.current = []
+      return
+    }
 
     const recordStartSec = recordStartSecRef.current
     const trackId = recordTrackIdRef.current
-    const { project, quantizeDenom, isPlaying: stillPlaying, recordStopSec, setProject } =
-      useStore.getState()
+    const {
+      project,
+      quantizeDenom,
+      isPlaying: stillPlaying,
+      recordStopSec,
+      setProject,
+    } = useStore.getState()
 
     // 녹음 시작 트랙이 더 이상 없으면(삭제됨) 커밋 생략
-    if (!project.tracks.some((t) => t.id === trackId)) { eventsRef.current = []; return }
+    if (!project.tracks.some((t) => t.id === trackId)) {
+      eventsRef.current = []
+      return
+    }
 
     // disarm 경로(재생 유지)는 라이브 transport 위치를,
     // stop 경로(정지)는 stop 직전 스냅샷(recordStopSec)을 종료 시점으로 사용.

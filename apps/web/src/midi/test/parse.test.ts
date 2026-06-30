@@ -15,7 +15,7 @@ describe('parseMidiMessage', () => {
   })
 
   it('0x9F (ch16) → 채널 무시하고 noteon 반환', () => {
-    const result = parseMidiMessage([0x9F, 48, 64])
+    const result = parseMidiMessage([0x9f, 48, 64])
     expect(result).toEqual({ type: 'noteon', pitch: 48, velocity: 64 })
   })
 
@@ -41,15 +41,15 @@ describe('parseMidiMessage', () => {
   // ── 무시할 메시지들 ──────────────────────────────────────────
 
   it('0xB0 Control Change → null', () => {
-    expect(parseMidiMessage([0xB0, 7, 127])).toBeNull()
+    expect(parseMidiMessage([0xb0, 7, 127])).toBeNull()
   })
 
   it('0xA0 Aftertouch → null', () => {
-    expect(parseMidiMessage([0xA0, 60, 64])).toBeNull()
+    expect(parseMidiMessage([0xa0, 60, 64])).toBeNull()
   })
 
   it('0xE0 Pitch Bend → null', () => {
-    expect(parseMidiMessage([0xE0, 0, 64])).toBeNull()
+    expect(parseMidiMessage([0xe0, 0, 64])).toBeNull()
   })
 
   // ── Uint8Array 입력 ───────────────────────────────────────────

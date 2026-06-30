@@ -6,9 +6,15 @@ const transport = {
   start: vi.fn(),
   stop: vi.fn(),
   cancel: vi.fn(),
-  schedule: vi.fn((cb: (t: number) => void, time: number) => { cb(time) }),
-  scheduleOnce: vi.fn((cb: (t: number) => void, time: number) => { cb(time) }),
-  get seconds() { return 0 },
+  schedule: vi.fn((cb: (t: number) => void, time: number) => {
+    cb(time)
+  }),
+  scheduleOnce: vi.fn((cb: (t: number) => void, time: number) => {
+    cb(time)
+  }),
+  get seconds() {
+    return 0
+  },
 }
 
 vi.mock('tone', () => {
@@ -21,7 +27,13 @@ vi.mock('tone', () => {
 
 import { buildSchedule, createPlaybackEngine } from '../playback'
 import { linearToDb } from '../multitrack'
-import { createEmptyProject, createTrack, createNote, addTrack, addNote } from '@sculptone/score-model'
+import {
+  createEmptyProject,
+  createTrack,
+  createNote,
+  addTrack,
+  addNote,
+} from '@sculptone/score-model'
 
 describe('buildSchedule', () => {
   it('각 노트를 시작 초(seconds)로 변환해 스케줄 항목을 만든다', () => {
@@ -72,7 +84,7 @@ describe('createPlaybackEngine.play', () => {
     let p = addTrack(createEmptyProject('S'), t)
     p = addNote(p, t.id, createNote({ pitch: 60, start: 480, duration: 480, velocity: 100 }))
     const engine = createPlaybackEngine((tid) =>
-      tid === t.id ? { triggerAttackRelease, volume: { value: 0 } } : null
+      tid === t.id ? { triggerAttackRelease, volume: { value: 0 } } : null,
     )
     const onEnded = vi.fn()
 
@@ -99,10 +111,18 @@ describe('createPlaybackEngine.play', () => {
     p = addNote(p, t1.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 96 }))
     p = addNote(p, t2.id, createNote({ pitch: 36, start: 0, duration: 480, velocity: 80 }))
     // t2 muted
-    p = { ...p, tracks: p.tracks.map((t) => t.id === t2.id ? { ...t, mixer: { ...t.mixer, muted: true } } : t) }
+    p = {
+      ...p,
+      tracks: p.tracks.map((t) =>
+        t.id === t2.id ? { ...t, mixer: { ...t.mixer, muted: true } } : t,
+      ),
+    }
 
     // 모든 트랙에 유효 instrument 반환 → audible 필터만이 유일한 차별 요인
-    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: triggerAR, volume: { value: 0 } }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: triggerAR,
+      volume: { value: 0 },
+    }))
     await engine.play(p)
     // audible은 Piano 1개뿐 → schedule/triggerAR 각 1회 (mute 필터 제거 시 2회로 FAIL)
     expect(transport.schedule).toHaveBeenCalledTimes(1)
@@ -124,7 +144,12 @@ describe('createPlaybackEngine.play', () => {
     const t = createTrack('Piano')
     let p = addTrack(createEmptyProject('S'), t)
     p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
-    p = { ...p, tracks: p.tracks.map((tr) => tr.id === t.id ? { ...tr, mixer: { ...tr.mixer, volume: 0.5 } } : tr) }
+    p = {
+      ...p,
+      tracks: p.tracks.map((tr) =>
+        tr.id === t.id ? { ...tr, mixer: { ...tr.mixer, volume: 0.5 } } : tr,
+      ),
+    }
     const engine = createPlaybackEngine(() => piano)
     await engine.play(p)
     expect(piano.volume.value).toBeCloseTo(linearToDb(0.5))
@@ -133,7 +158,10 @@ describe('createPlaybackEngine.play', () => {
   it('재생할 노트가 없으면 transport.start를 호출하지 않고 즉시 onEnded', async () => {
     const t = createTrack('Piano') // 노트 없음
     const p = addTrack(createEmptyProject('S'), t)
-    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: vi.fn(), volume: { value: 0 } }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
     const onEnded = vi.fn()
     await engine.play(p, onEnded)
     expect(transport.start).not.toHaveBeenCalled()
@@ -144,7 +172,10 @@ describe('createPlaybackEngine.play', () => {
   it('keepAlive 모드: 노트가 없어도 transport.start를 호출하고 자동종료(scheduleOnce)/onEnded를 등록하지 않는다', async () => {
     const t = createTrack('Piano') // 노트 없음
     const p = addTrack(createEmptyProject('S'), t)
-    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: vi.fn(), volume: { value: 0 } }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
     const onEnded = vi.fn()
     await engine.play(p, onEnded, undefined, { keepAlive: true })
     // 빈 트랙이어도 transport는 시작되어 Stop 전까지 유지된다
@@ -158,7 +189,10 @@ describe('createPlaybackEngine.play', () => {
     const t = createTrack('Piano')
     let p = addTrack(createEmptyProject('S'), t)
     p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
-    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: vi.fn(), volume: { value: 0 } }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
     const onEnded = vi.fn()
     await engine.play(p, onEnded, undefined, { keepAlive: true })
     expect(transport.start).toHaveBeenCalledTimes(1)
@@ -171,7 +205,10 @@ describe('createPlaybackEngine.play', () => {
     const t = createTrack('Piano')
     let p = addTrack(createEmptyProject('S'), t)
     p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
-    const engine = createPlaybackEngine(() => ({ triggerAttackRelease: triggerAR, volume: { value: 0 } }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: triggerAR,
+      volume: { value: 0 },
+    }))
     const onEnded = vi.fn()
     await engine.play(p, onEnded, () => false)
     expect(transport.stop).not.toHaveBeenCalled()

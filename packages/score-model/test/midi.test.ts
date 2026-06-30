@@ -6,7 +6,7 @@ import { projectToMidi, midiToProject } from '../src/midi'
 
 function sampleProject() {
   const t = createTrack('Piano')
-  const n1 = createNote({ pitch: 60, start: 0,   duration: 480, velocity: 96 })
+  const n1 = createNote({ pitch: 60, start: 0, duration: 480, velocity: 96 })
   const n2 = createNote({ pitch: 64, start: 480, duration: 240, velocity: 80 })
   let p = addTrack(createEmptyProject('Test MIDI'), t)
   p = addNote(p, t.id, n1)
@@ -109,7 +109,11 @@ describe('midiToProject', () => {
     const t = createTrack('Waltz')
     let p = createEmptyProject('Waltz')
     p = { ...p, transport: { ...p.transport, timeSignature: [3, 4] } }
-    p = addNote(addTrack(p, t), t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 96 }))
+    p = addNote(
+      addTrack(p, t),
+      t.id,
+      createNote({ pitch: 60, start: 0, duration: 480, velocity: 96 }),
+    )
     const restored = midiToProject(projectToMidi(p))
     expect(restored.transport.timeSignature).toEqual([3, 4])
   })
@@ -141,17 +145,17 @@ describe('MIDI 라운드트립', () => {
     expect(restored.tracks).toHaveLength(p.tracks.length)
 
     // 노트 비교 (ticks 순 정렬로 순서 보장)
-    const origNotes  = [...p.tracks[0]!.notes].sort((a, b) => a.start - b.start)
-    const resNotes   = [...restored.tracks[0]!.notes].sort((a, b) => a.start - b.start)
+    const origNotes = [...p.tracks[0]!.notes].sort((a, b) => a.start - b.start)
+    const resNotes = [...restored.tracks[0]!.notes].sort((a, b) => a.start - b.start)
     expect(resNotes).toHaveLength(origNotes.length)
 
     for (let i = 0; i < origNotes.length; i++) {
       const o = origNotes[i]!
       const r = resNotes[i]!
-      expect(r.pitch).toBe(o.pitch)         // 정수 → 무손실
-      expect(r.start).toBe(o.start)         // 정수 ticks → 무손실
-      expect(r.duration).toBe(o.duration)   // 정수 ticks → 무손실
-      expect(r.velocity).toBe(o.velocity)   // round(v/127*127)=v → 무손실
+      expect(r.pitch).toBe(o.pitch) // 정수 → 무손실
+      expect(r.start).toBe(o.start) // 정수 ticks → 무손실
+      expect(r.duration).toBe(o.duration) // 정수 ticks → 무손실
+      expect(r.velocity).toBe(o.velocity) // round(v/127*127)=v → 무손실
     }
   })
 
@@ -161,9 +165,9 @@ describe('MIDI 라운드트립', () => {
     let p = createEmptyProject('Multi')
     p = addTrack(p, t1)
     p = addTrack(p, t2)
-    p = addNote(p, t1.id, createNote({ pitch: 60, start: 0,   duration: 480, velocity: 100 }))
-    p = addNote(p, t1.id, createNote({ pitch: 62, start: 480, duration: 240, velocity: 80  }))
-    p = addNote(p, t2.id, createNote({ pitch: 36, start: 0,   duration: 960, velocity: 90  }))
+    p = addNote(p, t1.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
+    p = addNote(p, t1.id, createNote({ pitch: 62, start: 480, duration: 240, velocity: 80 }))
+    p = addNote(p, t2.id, createNote({ pitch: 36, start: 0, duration: 960, velocity: 90 }))
 
     const restored = midiToProject(projectToMidi(p), 'Multi')
     expect(restored.tracks).toHaveLength(2)
@@ -177,7 +181,7 @@ describe('MIDI 라운드트립', () => {
     const t = createTrack('X')
     let p = addTrack(createEmptyProject('E'), t)
     // velocity=0은 MIDI note-off로 해석되어 손실됨 → 계획서 허용에 따라 1로 변경
-    p = addNote(p, t.id, createNote({ pitch: 60, start: 0,   duration: 480, velocity: 1   }))
+    p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 1 }))
     p = addNote(p, t.id, createNote({ pitch: 61, start: 480, duration: 480, velocity: 127 }))
     const restored = midiToProject(projectToMidi(p))
     const vels = restored.tracks[0]!.notes.map((n) => n.velocity).sort((a, b) => a - b)

@@ -3,7 +3,7 @@ import { pxToTicks, pxToSemitones, computeMove, computeResize } from '../drag'
 import { PITCH_LOW, PITCH_HIGH, LANE_HEIGHT, PX_PER_BEAT } from '../geometry'
 
 const PPQ = 480
-const GRID = 120  // divisionToTicks(16, 480) = 480*4/16 = 120
+const GRID = 120 // divisionToTicks(16, 480) = 480*4/16 = 120
 
 // ── pxToTicks ────────────────────────────────────────────────
 

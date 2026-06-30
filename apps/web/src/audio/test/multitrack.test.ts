@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
+import { audibleTrackIds, buildMultiSchedule, linearToDb } from '../multitrack'
 import {
-  audibleTrackIds,
-  buildMultiSchedule,
-  linearToDb,
-} from '../multitrack'
-import {
-  createEmptyProject, createTrack, createNote,
-  addTrack, addNote, updateTrackMixer,
+  createEmptyProject,
+  createTrack,
+  createNote,
+  addTrack,
+  addNote,
+  updateTrackMixer,
 } from '@sculptone/score-model'
 
 // ── 테스트 픽스처 ──────────────────────────────────────────────
@@ -20,7 +20,7 @@ function makeProject() {
   p = addTrack(p, t2)
   p = addTrack(p, t3)
   // Piano: note at tick 0, 480t duration, pitch 60
-  p = addNote(p, t1.id, createNote({ pitch: 60, start: 0,   duration: 480, velocity: 96 }))
+  p = addNote(p, t1.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 96 }))
   // Bass: note at tick 480, pitch 36
   p = addNote(p, t2.id, createNote({ pitch: 36, start: 480, duration: 960, velocity: 80 }))
   // Drums: no notes

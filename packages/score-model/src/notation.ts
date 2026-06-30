@@ -6,10 +6,10 @@ export type DurationType = 'whole' | 'half' | 'quarter' | 'eighth' | '16th'
 
 export interface NotationNote {
   kind: 'note'
-  pitches: number[]        // MIDI pitches (오름차순). 1개=단음, 2+개=화음.
+  pitches: number[] // MIDI pitches (오름차순). 1개=단음, 2+개=화음.
   durationType: DurationType
   dots: 0 | 1
-  ticks: number            // 실제 tick 길이 (MusicXML <duration> 용)
+  ticks: number // 실제 tick 길이 (MusicXML <duration> 용)
   tie?: 'start' | 'stop' | 'startstop'
 }
 
@@ -17,7 +17,7 @@ export interface NotationRest {
   kind: 'rest'
   durationType: DurationType
   dots: 0 | 1
-  ticks: number            // 실제 gap tick 길이 (MusicXML <duration> 용)
+  ticks: number // 실제 gap tick 길이 (MusicXML <duration> 용)
 }
 
 export type NotationElement = NotationNote | NotationRest
@@ -33,7 +33,7 @@ export interface TrackNotation {
 export interface DurationSpec {
   durationType: DurationType
   dots: 0 | 1
-  ticks: number            // canonical tick count (ppq 기준)
+  ticks: number // canonical tick count (ppq 기준)
 }
 
 // ── 내부 타입 ──────────────────────────────────────────────────
@@ -62,11 +62,11 @@ export function midiToOctave(pitch: number): number {
  */
 function buildDurationTable(ppq: number): DurationSpec[] {
   const base: Array<[DurationType, number]> = [
-    ['16th',    ppq / 4],
-    ['eighth',  ppq / 2],
+    ['16th', ppq / 4],
+    ['eighth', ppq / 2],
     ['quarter', ppq],
-    ['half',    ppq * 2],
-    ['whole',   ppq * 4],
+    ['half', ppq * 2],
+    ['whole', ppq * 4],
   ]
   const result: DurationSpec[] = []
   for (const [durationType, t] of base) {
@@ -156,10 +156,7 @@ export function flattenToChords(
  * @returns 마디별 ChordEvent 배열 (인덱스 = 마디 번호)
  * @public
  */
-export function splitAtBarlines(
-  chords: ChordEvent[],
-  measureTicks: number,
-): ChordEvent[][] {
+export function splitAtBarlines(chords: ChordEvent[], measureTicks: number): ChordEvent[][] {
   if (chords.length === 0) return []
 
   const lastEnd = chords.reduce((m, c) => Math.max(m, c.start + c.duration), 0)
@@ -224,7 +221,12 @@ export function fillRests(
     if (chord.start > cursor) {
       const gapTicks = chord.start - cursor
       const spec = ticksToDurationType(gapTicks, ppq)
-      elements.push({ kind: 'rest', durationType: spec.durationType, dots: spec.dots, ticks: gapTicks })
+      elements.push({
+        kind: 'rest',
+        durationType: spec.durationType,
+        dots: spec.dots,
+        ticks: gapTicks,
+      })
       cursor = chord.start // 실제 위치로 점프 (spec.ticks 아님 — 정렬 유지)
     }
 
@@ -245,7 +247,12 @@ export function fillRests(
   if (cursor < measureEnd) {
     const gapTicks = measureEnd - cursor
     const spec = ticksToDurationType(gapTicks, ppq)
-    elements.push({ kind: 'rest', durationType: spec.durationType, dots: spec.dots, ticks: gapTicks })
+    elements.push({
+      kind: 'rest',
+      durationType: spec.durationType,
+      dots: spec.dots,
+      ticks: gapTicks,
+    })
   }
 
   return elements

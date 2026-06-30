@@ -13,7 +13,7 @@ export interface RecordingContext {
   ppq: number
   tempo: number
   quantizeDenom: number // 0 또는 음수 → 양자화 없음(snap 스킵)
-  endSec: number       // 녹음 종료 시점(상대 초). dangling noteon 마감에 사용.
+  endSec: number // 녹음 종료 시점(상대 초). dangling noteon 마감에 사용.
 }
 
 /**

@@ -37,7 +37,9 @@ export function useMidi(onMessage: (msg: MidiNoteMessage) => void) {
   const accessRef = useRef<MIDIAccessLike | null>(null)
   // stable callback ref — onMessage prop 이 바뀌어도 핸들러 재등록 불필요
   const onMessageRef = useRef(onMessage)
-  useEffect(() => { onMessageRef.current = onMessage }, [onMessage])
+  useEffect(() => {
+    onMessageRef.current = onMessage
+  }, [onMessage])
 
   useEffect(() => {
     const nav = navigator as unknown as NavWithMidi
@@ -86,7 +88,9 @@ export function useMidi(onMessage: (msg: MidiNoteMessage) => void) {
         // A-1: onstatechange 해제
         accessRef.current.onstatechange = null
         // A-2: 언마운트 시 onmidimessage 핸들러 해제
-        accessRef.current.inputs.forEach((i) => { i.onmidimessage = null })
+        accessRef.current.inputs.forEach((i) => {
+          i.onmidimessage = null
+        })
       }
     }
   }, [])

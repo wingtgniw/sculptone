@@ -3,7 +3,9 @@ import { render, screen } from '@testing-library/react'
 import { useStore } from '../state/store'
 import { AppShell } from '../shell/AppShell'
 
-vi.mock('../audio/useAudio', () => ({ useAudio: () => ({ play: vi.fn(), stop: vi.fn(), getSeconds: () => 0 }) }))
+vi.mock('../audio/useAudio', () => ({
+  useAudio: () => ({ play: vi.fn(), stop: vi.fn(), getSeconds: () => 0 }),
+}))
 const useAutosaveMock = vi.hoisted(() => vi.fn())
 vi.mock('../io/useAutosave', () => ({ useAutosave: useAutosaveMock }))
 vi.mock('../midi/useMidi', () => ({
@@ -26,7 +28,9 @@ vi.mock('../sound/SoundDesignPanel', () => ({
 }))
 
 describe('AppShell compose mode', () => {
-  beforeEach(() => { useStore.setState({ activeMode: 'compose' }) })
+  beforeEach(() => {
+    useStore.setState({ activeMode: 'compose' })
+  })
   it('Compose 모드에서 피아노 롤과 트랙 패널, 재생 버튼이 보인다', () => {
     render(<AppShell />)
     expect(screen.getByTestId('pianoroll')).toBeInTheDocument()

@@ -59,63 +59,93 @@ describe('SoundSchema — oscillator/lfo 확장 유효성', () => {
   })
 
   it('oscillator.type이 triangle인 patch는 유효하다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, oscillator: { type: 'triangle', detune: 0 },
-    }).success).toBe(true)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        oscillator: { type: 'triangle', detune: 0 },
+      }).success,
+    ).toBe(true)
   })
 
   it('oscillator.detune가 음수(-1200)인 patch는 유효하다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, oscillator: { type: 'sine', detune: -1200 },
-    }).success).toBe(true)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        oscillator: { type: 'sine', detune: -1200 },
+      }).success,
+    ).toBe(true)
   })
 
   it('잘못된 oscillator.type("noise")은 거부된다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, oscillator: { type: 'noise', detune: 0 },
-    }).success).toBe(false)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        oscillator: { type: 'noise', detune: 0 },
+      }).success,
+    ).toBe(false)
   })
 
   it('lfo.target이 pitch인 patch는 유효하다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'pitch', rate: 1, depth: 0.3 },
-    }).success).toBe(true)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'pitch', rate: 1, depth: 0.3 },
+      }).success,
+    ).toBe(true)
   })
 
   it('lfo.target이 amplitude인 patch는 유효하다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'amplitude', rate: 0.5, depth: 1 },
-    }).success).toBe(true)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'amplitude', rate: 0.5, depth: 1 },
+      }).success,
+    ).toBe(true)
   })
 
   it('잘못된 lfo.target("volume")은 거부된다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'volume', rate: 1, depth: 0.5 },
-    }).success).toBe(false)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'volume', rate: 1, depth: 0.5 },
+      }).success,
+    ).toBe(false)
   })
 
   it('lfo.rate <= 0은 거부된다(z.number().positive())', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'filter', rate: 0, depth: 0.5 },
-    }).success).toBe(false)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'filter', rate: 0, depth: 0.5 },
+      }).success,
+    ).toBe(false)
   })
 
   it('lfo.rate 음수는 거부된다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'filter', rate: -1, depth: 0.5 },
-    }).success).toBe(false)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'filter', rate: -1, depth: 0.5 },
+      }).success,
+    ).toBe(false)
   })
 
   it('lfo.depth > 1은 거부된다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'filter', rate: 1, depth: 1.5 },
-    }).success).toBe(false)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'filter', rate: 1, depth: 1.5 },
+      }).success,
+    ).toBe(false)
   })
 
   it('lfo.depth < 0은 거부된다', () => {
-    expect(SoundSchema.safeParse({
-      ...BASE_PATCH, lfo: { target: 'pitch', rate: 1, depth: -0.1 },
-    }).success).toBe(false)
+    expect(
+      SoundSchema.safeParse({
+        ...BASE_PATCH,
+        lfo: { target: 'pitch', rate: 1, depth: -0.1 },
+      }).success,
+    ).toBe(false)
   })
 })
 

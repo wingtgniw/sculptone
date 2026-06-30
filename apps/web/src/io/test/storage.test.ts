@@ -5,8 +5,11 @@ import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, it, expect } from 'vitest'
 import { saveProject, loadProject, listProjects, deleteProject, __resetDB } from '../storage'
 import {
-  createEmptyProject, createTrack, createNote,
-  addTrack, addNote,
+  createEmptyProject,
+  createTrack,
+  createNote,
+  addTrack,
+  addNote,
 } from '@sculptone/score-model'
 
 function makeProject(title = 'Test') {
@@ -55,9 +58,7 @@ describe('storage', () => {
     const p = makeProject('Fields')
     await saveProject(p)
     const list = await listProjects()
-    expect(list[0]).toEqual(
-      expect.objectContaining({ id: p.id, title: 'Fields' }),
-    )
+    expect(list[0]).toEqual(expect.objectContaining({ id: p.id, title: 'Fields' }))
     // tracks 는 포함되지 않음
     expect((list[0] as unknown as Record<string, unknown>)['tracks']).toBeUndefined()
   })

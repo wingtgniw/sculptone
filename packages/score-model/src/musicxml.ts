@@ -5,27 +5,44 @@ import type { NotationNote, NotationRest, NotationElement, DurationType } from '
 // ── 내부 헬퍼 ──────────────────────────────────────────────────
 
 /** MIDI pitch class → MusicXML step / alter */
-const PC_STEP  = ['C','C','D','D','E','F','F','G','G','A','A','B'] as const
-const PC_ALTER = [0,  1,  0,  1,  0,  0,  1,  0,  1,  0,  1,  0] as const
+const PC_STEP = ['C', 'C', 'D', 'D', 'E', 'F', 'F', 'G', 'G', 'A', 'A', 'B'] as const
+const PC_ALTER = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0] as const
 
 function midiToXml(pitch: number): { step: string; octave: number; alter: number } {
   const pc = ((pitch % 12) + 12) % 12
-  const octave = midiToOctave(pitch)   // C: 공유 헬퍼 사용
+  const octave = midiToOctave(pitch) // C: 공유 헬퍼 사용
   return { step: PC_STEP[pc]!, octave, alter: PC_ALTER[pc]! }
 }
 
 /** project.transport.key → MusicXML fifths (C major = 0 기본) */
 function keyToFifths(key: string): number {
   const MAP: Record<string, number> = {
-    'C': 0,  'G': 1,  'D': 2,  'A': 3,  'E': 4,  'B': 5,  'F#': 6,  'C#': 7,
-    'F': -1, 'Bb': -2, 'Eb': -3, 'Ab': -4, 'Db': -5, 'Gb': -6, 'Cb': -7,
+    C: 0,
+    G: 1,
+    D: 2,
+    A: 3,
+    E: 4,
+    B: 5,
+    'F#': 6,
+    'C#': 7,
+    F: -1,
+    Bb: -2,
+    Eb: -3,
+    Ab: -4,
+    Db: -5,
+    Gb: -6,
+    Cb: -7,
   }
   return MAP[key] ?? 0
 }
 
 /** XML 특수문자 이스케이프 */
 function escapeXml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 /** NotationRest → <note> XML 문자열 */
@@ -42,11 +59,7 @@ function renderRest(el: NotationRest): string {
 }
 
 /** 단일 pitch + NotationNote 메타 → <note> XML 문자열 */
-function renderPitch(
-  pitch: number,
-  el: NotationNote,
-  isChordContinuation: boolean,
-): string {
+function renderPitch(pitch: number, el: NotationNote, isChordContinuation: boolean): string {
   const { step, octave, alter } = midiToXml(pitch)
   const lines = ['      <note>']
   if (isChordContinuation) lines.push('        <chord/>')
@@ -104,7 +117,10 @@ function renderElements(elements: NotationElement[], mLines: string[]): void {
 }
 
 function renderAttributes(
-  ppq: number, fifths: number, numerator: number, denominator: number,
+  ppq: number,
+  fifths: number,
+  numerator: number,
+  denominator: number,
 ): string[] {
   return [
     '      <attributes>',
@@ -174,9 +190,10 @@ export function projectToMusicXML(project: Project): string {
 
     const notation = trackToNotation(track, project.transport)
     // A: 빈 트랙 → 전마디 쉼표 1마디 폴백 (DTD: part(measure+))
-    const measures = notation.measures.length > 0
-      ? notation.measures
-      : [{ elements: fillRests([], 0, measureTicks, ppq) }]
+    const measures =
+      notation.measures.length > 0
+        ? notation.measures
+        : [{ elements: fillRests([], 0, measureTicks, ppq) }]
 
     const measureLines: string[] = []
     for (let mi = 0; mi < measures.length; mi++) {

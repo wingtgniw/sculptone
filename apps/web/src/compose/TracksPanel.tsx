@@ -6,11 +6,11 @@ import type { ChangeEvent } from 'react'
 const PRESETS = listPresets()
 
 export function TracksPanel() {
-  const project              = useStore((s) => s.project)
-  const selectedTrackId      = useStore((s) => s.selectedTrackId)
-  const soundPanelTrackId    = useStore((s) => s.soundPanelTrackId)
-  const setProject           = useStore((s) => s.setProject)
-  const selectTrack          = useStore((s) => s.selectTrack)
+  const project = useStore((s) => s.project)
+  const selectedTrackId = useStore((s) => s.selectedTrackId)
+  const soundPanelTrackId = useStore((s) => s.soundPanelTrackId)
+  const setProject = useStore((s) => s.setProject)
+  const selectTrack = useStore((s) => s.selectTrack)
   const setSoundPanelTrackId = useStore((s) => s.setSoundPanelTrackId)
 
   const handleAddTrack = () => {
@@ -45,17 +45,31 @@ export function TracksPanel() {
   return (
     <div style={{ padding: '14px 12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-        <p style={{ fontSize: 11, color: 'var(--text-lo)', textTransform: 'uppercase', letterSpacing: '.1em', margin: 0, flex: 1 }}>
+        <p
+          style={{
+            fontSize: 11,
+            color: 'var(--text-lo)',
+            textTransform: 'uppercase',
+            letterSpacing: '.1em',
+            margin: 0,
+            flex: 1,
+          }}
+        >
           Tracks
         </p>
         <button
           aria-label="Add Track"
           onClick={handleAddTrack}
           style={{
-            font: 'inherit', fontSize: 11, fontWeight: 700,
-            padding: '2px 7px', borderRadius: 'var(--r-sm)',
-            border: '1px solid var(--border)', cursor: 'pointer',
-            background: 'var(--accent-soft)', color: 'var(--accent)',
+            font: 'inherit',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '2px 7px',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid var(--border)',
+            cursor: 'pointer',
+            background: 'var(--accent-soft)',
+            color: 'var(--accent)',
           }}
         >
           +
@@ -72,14 +86,29 @@ export function TracksPanel() {
                 aria-current={sel}
                 onClick={() => selectTrack(t.id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 8, flex: 1,
-                  padding: '6px 8px', borderRadius: 'var(--r-sm)', border: 0, cursor: 'pointer',
-                  fontSize: 12, textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  flex: 1,
+                  padding: '6px 8px',
+                  borderRadius: 'var(--r-sm)',
+                  border: 0,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  textAlign: 'left',
                   background: sel ? 'var(--accent-soft)' : 'transparent',
                   color: sel ? 'var(--text-hi)' : 'var(--text-mid)',
                 }}
               >
-                <span style={{ width: 10, height: 10, borderRadius: 3, background: sel ? 'var(--accent)' : 'var(--dot-idle)', flexShrink: 0 }} />
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 3,
+                    background: sel ? 'var(--accent)' : 'var(--dot-idle)',
+                    flexShrink: 0,
+                  }}
+                />
                 {t.name}
               </button>
               {sel && (
@@ -88,9 +117,13 @@ export function TracksPanel() {
                     aria-label="Edit sound"
                     onClick={() => setSoundPanelTrackId(t.id)}
                     style={{
-                      font: 'inherit', fontSize: 10, padding: '3px 6px',
-                      borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
-                      cursor: 'pointer', background: 'var(--accent-soft)',
+                      font: 'inherit',
+                      fontSize: 10,
+                      padding: '3px 6px',
+                      borderRadius: 'var(--r-sm)',
+                      border: '1px solid var(--border)',
+                      cursor: 'pointer',
+                      background: 'var(--accent-soft)',
                       color: 'var(--accent)',
                     }}
                   >
@@ -101,8 +134,11 @@ export function TracksPanel() {
                     disabled={!canDelete}
                     onClick={() => handleDeleteTrack(t.id)}
                     style={{
-                      font: 'inherit', fontSize: 10, padding: '3px 6px',
-                      borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
+                      font: 'inherit',
+                      fontSize: 10,
+                      padding: '3px 6px',
+                      borderRadius: 'var(--r-sm)',
+                      border: '1px solid var(--border)',
                       cursor: canDelete ? 'pointer' : 'not-allowed',
                       background: 'transparent',
                       color: canDelete ? 'var(--text-lo)' : 'var(--text-disabled)',
@@ -122,14 +158,22 @@ export function TracksPanel() {
                 value={t.sound.presetId}
                 onChange={(e) => handlePresetChange(t.id, e)}
                 style={{
-                  width: '100%', marginTop: 4, font: 'inherit', fontSize: 11,
-                  padding: '3px 6px', borderRadius: 'var(--r-sm)',
-                  border: '1px solid var(--border)', cursor: 'pointer',
-                  background: 'var(--bg-elevated)', color: 'var(--text-mid)',
+                  width: '100%',
+                  marginTop: 4,
+                  font: 'inherit',
+                  fontSize: 11,
+                  padding: '3px 6px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-mid)',
                 }}
               >
                 {PRESETS.map((p) => (
-                  <option key={p.id} value={p.id}>{p.label}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
                 ))}
               </select>
             )}
@@ -139,9 +183,13 @@ export function TracksPanel() {
               <span
                 aria-label="Custom Patch"
                 style={{
-                  display: 'inline-block', marginTop: 4, fontSize: 10,
-                  padding: '2px 6px', borderRadius: 'var(--r-sm)',
-                  background: 'var(--accent-soft)', color: 'var(--accent)',
+                  display: 'inline-block',
+                  marginTop: 4,
+                  fontSize: 10,
+                  padding: '2px 6px',
+                  borderRadius: 'var(--r-sm)',
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent)',
                 }}
               >
                 Custom Patch

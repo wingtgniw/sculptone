@@ -56,8 +56,8 @@ export const SoundSchema = z.discriminatedUnion('kind', [
 export const NoteSchema = z.object({
   id: z.string(),
   pitch: z.number().int().min(0).max(127),
-  start: z.number().nonnegative(),     // ticks (절대)
-  duration: z.number().positive(),     // ticks
+  start: z.number().nonnegative(), // ticks (절대)
+  duration: z.number().positive(), // ticks
   velocity: z.number().int().min(0).max(127),
 })
 

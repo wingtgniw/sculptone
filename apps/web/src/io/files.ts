@@ -5,9 +5,9 @@
 export function downloadBytes(bytes: Uint8Array, filename: string, mime: string): void {
   // TypeScript 5.x requires ArrayBuffer-typed Uint8Array for BlobPart; cast is safe here
   const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: mime })
-  const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a') as HTMLAnchorElement
-  a.href     = url
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a') as HTMLAnchorElement
+  a.href = url
   a.download = filename
   document.body.appendChild(a)
   a.click()
@@ -25,7 +25,7 @@ export function downloadText(text: string, filename: string, mime: string): void
 export function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result as ArrayBuffer)
+    reader.onload = () => resolve(reader.result as ArrayBuffer)
     reader.onerror = () => reject(reader.error)
     reader.readAsArrayBuffer(file)
   })

@@ -36,10 +36,10 @@ export function projectToMidi(project: Project): Uint8Array {
     midiTrack.name = track.name
     for (const note of track.notes) {
       midiTrack.addNote({
-        midi:          note.pitch,
-        ticks:         note.start,
+        midi: note.pitch,
+        ticks: note.start,
         durationTicks: note.duration,
-        velocity:      Math.max(1, note.velocity) / 127,
+        velocity: Math.max(1, note.velocity) / 127,
       })
     }
   }
@@ -58,8 +58,8 @@ export function projectToMidi(project: Project): Uint8Array {
  * Note.id / Track.id / Project.id 는 새로 생성(UUID). 라운드트립에서 ID가 달라지는 것은 예상된 동작.
  */
 export function midiToProject(bytes: Uint8Array, title = 'Imported'): Project {
-  const midi  = new Midi(bytes)
-  const ppq   = midi.header.ppq
+  const midi = new Midi(bytes)
+  const ppq = midi.header.ppq
   const tempo = midi.header.tempos[0]?.bpm ?? 120
 
   let project = createEmptyProject(title)
@@ -77,8 +77,8 @@ export function midiToProject(bytes: Uint8Array, title = 'Imported'): Project {
     for (const note of midiTrack.notes) {
       const velocity = Math.max(0, Math.min(127, Math.round(note.velocity * 127)))
       const n = createNote({
-        pitch:    note.midi,
-        start:    note.ticks,
+        pitch: note.midi,
+        start: note.ticks,
         duration: Math.max(1, note.durationTicks),
         velocity,
       })

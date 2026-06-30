@@ -93,13 +93,24 @@ export function createPlaybackEngine(
         // 자동종료(scheduleOnce)/onEnded를 등록하지 않는다 — 사용자가 Stop할 때까지 녹음 지속.
         transport.start()
       } else if (endSec > 0) {
-        transport.scheduleOnce(() => { transport.stop(); transport.cancel(); onEnded?.() }, endSec)
+        transport.scheduleOnce(() => {
+          transport.stop()
+          transport.cancel()
+          onEnded?.()
+        }, endSec)
         transport.start()
       } else {
-        transport.stop(); transport.cancel(); onEnded?.()
+        transport.stop()
+        transport.cancel()
+        onEnded?.()
       }
     },
-    stop() { transport.stop(); transport.cancel() },
-    getSeconds() { return transport.seconds },
+    stop() {
+      transport.stop()
+      transport.cancel()
+    },
+    getSeconds() {
+      return transport.seconds
+    },
   }
 }

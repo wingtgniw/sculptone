@@ -1,8 +1,13 @@
 import { useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 import { useStore } from '../state/store'
 import {
-  createEmptyProject, createTrack, addTrack,
-  projectToMidi, midiToProject, serializeProject, projectToMusicXML,
+  createEmptyProject,
+  createTrack,
+  addTrack,
+  projectToMidi,
+  midiToProject,
+  serializeProject,
+  projectToMusicXML,
 } from '@sculptone/score-model'
 import { downloadBytes, downloadText, readFileAsArrayBuffer } from '../io/files'
 
@@ -20,9 +25,9 @@ const btnStyle: CSSProperties = {
 }
 
 export function FileMenu() {
-  const project        = useStore((s) => s.project)
+  const project = useStore((s) => s.project)
   const replaceProject = useStore((s) => s.replaceProject)
-  const fileInput      = useRef<HTMLInputElement>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
 
   const handleNew = () => {
@@ -30,19 +35,19 @@ export function FileMenu() {
   }
 
   const handleExportMidi = () => {
-    const bytes    = projectToMidi(project)
+    const bytes = projectToMidi(project)
     const filename = `${project.metadata.title.replace(/[^a-z0-9]/gi, '_') || 'untitled'}.mid`
     downloadBytes(bytes, filename, 'audio/midi')
   }
 
   const handleExportJson = () => {
-    const json     = serializeProject(project)
+    const json = serializeProject(project)
     const filename = `${project.metadata.title.replace(/[^a-z0-9]/gi, '_') || 'untitled'}.json`
     downloadText(json, filename, 'application/json')
   }
 
   const handleExportMusicXML = () => {
-    const xml      = projectToMusicXML(project)
+    const xml = projectToMusicXML(project)
     const filename = `${project.metadata.title.replace(/[^a-z0-9]/gi, '_') || 'untitled'}.musicxml`
     downloadText(xml, filename, 'application/vnd.recordare.musicxml+xml')
   }
@@ -51,7 +56,7 @@ export function FileMenu() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      const buf   = await readFileAsArrayBuffer(file)
+      const buf = await readFileAsArrayBuffer(file)
       const bytes = new Uint8Array(buf)
       const title = file.name.replace(/\.midi?$/i, '')
       replaceProject(midiToProject(bytes, title))
@@ -79,10 +84,7 @@ export function FileMenu() {
       <button style={btnStyle} onClick={handleExportMusicXML}>
         Export MusicXML
       </button>
-      <button
-        style={btnStyle}
-        onClick={() => fileInput.current?.click()}
-      >
+      <button style={btnStyle} onClick={() => fileInput.current?.click()}>
         Import MIDI
       </button>
       {/* hidden file input */}

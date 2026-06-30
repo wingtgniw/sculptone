@@ -29,7 +29,7 @@ const STAVE_Y = 40
 
 export function NotationView() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const project         = useStore((s) => s.project)
+  const project = useStore((s) => s.project)
   const selectedTrackId = useStore((s) => s.selectedTrackId)
 
   const track = project.tracks.find((t) => t.id === selectedTrackId)
@@ -47,8 +47,7 @@ export function NotationView() {
       if (notation.measures.length === 0) return
 
       const [numerator, denominator] = project.transport.timeSignature
-      const totalWidth =
-        STAVE_X_FIRST + notation.measures.length * MEASURE_WIDTH + 40
+      const totalWidth = STAVE_X_FIRST + notation.measures.length * MEASURE_WIDTH + 40
 
       const renderer = new Renderer(container, Renderer.Backends.SVG)
       renderer.resize(totalWidth, 160)

@@ -7,21 +7,21 @@ import { FileMenu } from '../FileMenu'
 // IO 모듈 모킹 (IndexedDB · 파일 시스템 없이 테스트)
 vi.mock('../../io/storage', () => ({
   listProjects: vi.fn().mockResolvedValue([]),
-  saveProject:  vi.fn().mockResolvedValue(undefined),
+  saveProject: vi.fn().mockResolvedValue(undefined),
 }))
 vi.mock('../../io/files', () => ({
   downloadBytes: vi.fn(),
-  downloadText:  vi.fn(),
+  downloadText: vi.fn(),
   readFileAsArrayBuffer: vi.fn(),
 }))
 vi.mock('@sculptone/score-model', async (importOrig) => {
   const orig = await importOrig<typeof import('@sculptone/score-model')>()
   return {
     ...orig,
-    projectToMidi:     vi.fn().mockReturnValue(new Uint8Array([0])),
-    midiToProject:     vi.fn().mockReturnValue(orig.createEmptyProject('Imported')),
-    serializeProject:  vi.fn().mockReturnValue('{}'),
-    projectToMusicXML: vi.fn().mockReturnValue('<?xml version="1.0"?>'),  // NEW
+    projectToMidi: vi.fn().mockReturnValue(new Uint8Array([0])),
+    midiToProject: vi.fn().mockReturnValue(orig.createEmptyProject('Imported')),
+    serializeProject: vi.fn().mockReturnValue('{}'),
+    projectToMusicXML: vi.fn().mockReturnValue('<?xml version="1.0"?>'), // NEW
   }
 })
 

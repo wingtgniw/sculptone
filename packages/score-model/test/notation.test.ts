@@ -157,7 +157,7 @@ describe('flattenToChords', () => {
   it('비겹침 노트 2개 → chord 2개, 순서 보존', () => {
     const result = flattenToChords([
       { pitch: 64, start: 480, duration: 480 },
-      { pitch: 60, start: 0,   duration: 480 },
+      { pitch: 60, start: 0, duration: 480 },
     ])
     expect(result).toHaveLength(2)
     expect(result[0]!.start).toBe(0)
@@ -167,7 +167,7 @@ describe('flattenToChords', () => {
   it('오버랩 노트: chord[0].duration이 chord[1].start까지 클리핑된다', () => {
     // note A: 0→960 (half), note B: 480→960 (quarter)
     const result = flattenToChords([
-      { pitch: 60, start: 0,   duration: 960 },
+      { pitch: 60, start: 0, duration: 960 },
       { pitch: 64, start: 480, duration: 480 },
     ])
     expect(result).toHaveLength(2)
@@ -271,7 +271,7 @@ describe('fillRests', () => {
     expect(els).toHaveLength(1)
     expect(els[0]!.kind).toBe('rest')
     expect(els[0]!.durationType).toBe('whole')
-    expect((els[0] as {ticks:number}).ticks).toBe(1920)
+    expect((els[0] as { ticks: number }).ticks).toBe(1920)
   })
 
   it('박자 시작 quarter note → 앞 gap 없음, 뒤 dotted-half rest', () => {
@@ -285,7 +285,7 @@ describe('fillRests', () => {
     // trailing gap = 1920-480 = 1440 → dotted-half
     expect(els[1]!.durationType).toBe('half')
     expect(els[1]!.dots).toBe(1)
-    expect((els[1] as {ticks:number}).ticks).toBe(1440)
+    expect((els[1] as { ticks: number }).ticks).toBe(1440)
   })
 
   it('마디 두 번째 박에 시작하는 노트 → quarter rest 앞에, half rest 뒤에', () => {
@@ -302,7 +302,7 @@ describe('fillRests', () => {
 
   it('두 quarter 노트 연속 → 사이 gap 없음, 뒤 half rest', () => {
     const chords = [
-      { start: 0,   duration: 480, pitches: [60] },
+      { start: 0, duration: 480, pitches: [60] },
       { start: 480, duration: 480, pitches: [64] },
     ]
     const els = fillRests(chords, MS, ME, PPQ)
@@ -317,7 +317,7 @@ describe('fillRests', () => {
     const chords = [{ start: 0, duration: 240, pitches: [60], tie: 'start' as const }]
     const els = fillRests(chords, MS, ME, PPQ)
     const noteEl = els.find((e) => e.kind === 'note')
-    expect((noteEl as {tie?:string}).tie).toBe('start')
+    expect((noteEl as { tie?: string }).tie).toBe('start')
   })
 })
 
@@ -344,8 +344,8 @@ describe('trackToNotation', () => {
     expect(result.measures).toHaveLength(1)
     const els = result.measures[0]!.elements
     expect(els[0]!.kind).toBe('note')
-    expect((els[0] as {durationType:string}).durationType).toBe('quarter')
-    expect((els[0] as {pitches:number[]}).pitches).toEqual([60])
+    expect((els[0] as { durationType: string }).durationType).toBe('quarter')
+    expect((els[0] as { pitches: number[] }).pitches).toEqual([60])
     // trailing rest
     expect(els[1]!.kind).toBe('rest')
   })
@@ -358,7 +358,7 @@ describe('trackToNotation', () => {
     const result = trackToNotation({ notes }, TRANSPORT_44)
     const el = result.measures[0]!.elements[0]!
     expect(el.kind).toBe('note')
-    expect((el as {pitches:number[]}).pitches).toEqual([60, 64])
+    expect((el as { pitches: number[] }).pitches).toEqual([60, 64])
   })
 
   it('2마디에 걸친 노트 → 2마디 생성, tie 존재', () => {
@@ -368,11 +368,11 @@ describe('trackToNotation', () => {
     expect(result.measures).toHaveLength(2)
     // 마디 0 마지막 요소에 tie:'start'
     const m0 = result.measures[0]!.elements
-    const tieStart = m0.find((e) => e.kind === 'note' && (e as {tie?:string}).tie === 'start')
+    const tieStart = m0.find((e) => e.kind === 'note' && (e as { tie?: string }).tie === 'start')
     expect(tieStart).toBeDefined()
     // 마디 1 첫 요소에 tie:'stop'
     const m1 = result.measures[1]!.elements
-    const tieStop = m1.find((e) => e.kind === 'note' && (e as {tie?:string}).tie === 'stop')
+    const tieStop = m1.find((e) => e.kind === 'note' && (e as { tie?: string }).tie === 'stop')
     expect(tieStop).toBeDefined()
   })
 
@@ -380,7 +380,7 @@ describe('trackToNotation', () => {
     // note A: 0→960, note B: 480→960
     // After clip: A(0, dur=480), B(480, dur=480)
     const notes = [
-      { pitch: 60, start: 0,   duration: 960, id: '1', velocity: 96 },
+      { pitch: 60, start: 0, duration: 960, id: '1', velocity: 96 },
       { pitch: 64, start: 480, duration: 480, id: '2', velocity: 80 },
     ]
     const result = trackToNotation({ notes }, TRANSPORT_44)
@@ -388,9 +388,9 @@ describe('trackToNotation', () => {
     const noteEls = els.filter((e) => e.kind === 'note')
     expect(noteEls).toHaveLength(2)
     // 첫 노트는 pitch 60만 (A 단독)
-    expect((noteEls[0] as {pitches:number[]}).pitches).toEqual([60])
+    expect((noteEls[0] as { pitches: number[] }).pitches).toEqual([60])
     // 두 번째 노트는 pitch 64
-    expect((noteEls[1] as {pitches:number[]}).pitches).toEqual([64])
+    expect((noteEls[1] as { pitches: number[] }).pitches).toEqual([64])
   })
 
   it('두 번째 마디에만 노트 → 2마디 생성', () => {

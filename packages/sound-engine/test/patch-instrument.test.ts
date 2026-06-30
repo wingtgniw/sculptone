@@ -85,10 +85,14 @@ describe('patchToToneConfig', () => {
 // vi.mock 호이스팅 문제를 피하기 위해 vi.hoisted로 mock 객체를 먼저 정의한다.
 
 const {
-  MockPolySynth, mockPolyInstance,
-  MockFilter, mockFilterInstance,
-  MockReverb, mockReverbInstance,
-  MockFeedbackDelay, mockDelayInstance,
+  MockPolySynth,
+  mockPolyInstance,
+  MockFilter,
+  mockFilterInstance,
+  MockReverb,
+  mockReverbInstance,
+  MockFeedbackDelay,
+  mockDelayInstance,
 } = vi.hoisted(() => {
   const mockPolyInstance = {
     set: vi.fn(),
@@ -122,10 +126,14 @@ const {
   const MockFeedbackDelay = vi.fn().mockReturnValue(mockDelayInstance)
 
   return {
-    MockPolySynth, mockPolyInstance,
-    MockFilter, mockFilterInstance,
-    MockReverb, mockReverbInstance,
-    MockFeedbackDelay, mockDelayInstance,
+    MockPolySynth,
+    mockPolyInstance,
+    MockFilter,
+    mockFilterInstance,
+    MockReverb,
+    mockReverbInstance,
+    MockFeedbackDelay,
+    mockDelayInstance,
   }
 })
 

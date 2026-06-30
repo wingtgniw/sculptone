@@ -1,21 +1,21 @@
 :root {
   --bg-inset: #070708;
-  --bg-base: #0C0C0D;
+  --bg-base: #0c0c0d;
   --bg-surface: #141415;
-  --bg-elevated: #1D1D1F;
-  --border: #2A2A2C;
-  --border-strong: #3A3A3D;
+  --bg-elevated: #1d1d1f;
+  --border: #2a2a2c;
+  --border-strong: #3a3a3d;
 
-  --text-hi: #F5F5F6;
-  --text-mid: #A6A6AA;
-  --text-lo: #6B6B70;
+  --text-hi: #f5f5f6;
+  --text-mid: #a6a6aa;
+  --text-lo: #6b6b70;
 
-  --accent: #F2A65A;
-  --accent-deep: #C97E3C;
+  --accent: #f2a65a;
+  --accent-deep: #c97e3c;
   --accent-soft: rgba(242, 166, 90, 0.14);
   --on-accent: #1a1206;
-  --dot-idle: #55565A;
-  --record: #E2685F;
+  --dot-idle: #55565a;
+  --record: #e2685f;
 
   --r-sm: 6px;
   --r-md: 10px;

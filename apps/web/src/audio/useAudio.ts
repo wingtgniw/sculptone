@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { createInstrument, descriptorToToneSpec, getPreset, createInstrumentFromSound } from '@sculptone/sound-engine'
+import {
+  createInstrument,
+  descriptorToToneSpec,
+  getPreset,
+  createInstrumentFromSound,
+} from '@sculptone/sound-engine'
 import { createPlaybackEngine, type PlaybackEngine, type MultiInstrument } from './playback'
 import { useStore } from '../state/store'
 import type { Project, Track } from '@sculptone/score-model'
@@ -27,9 +32,9 @@ function buildTrackInstrument(track: Track): MultiInstrument & { dispose: () => 
 
 export function useAudio() {
   const instrumentsRef = useRef(new Map<string, ReturnType<typeof buildTrackInstrument>>())
-  const soundKeyRef    = useRef(new Map<string, string>()) // trackId → cacheKey
-  const engineRef      = useRef<PlaybackEngine | null>(null)
-  const playGenRef     = useRef(0)
+  const soundKeyRef = useRef(new Map<string, string>()) // trackId → cacheKey
+  const engineRef = useRef<PlaybackEngine | null>(null)
+  const playGenRef = useRef(0)
 
   /**
    * 프로젝트 트랙과 instrument Map을 동기화한다.
@@ -72,7 +77,9 @@ export function useAudio() {
 
     void engineRef.current.play(
       project,
-      () => { useStore.getState().setPlaying(false) },
+      () => {
+        useStore.getState().setPlaying(false)
+      },
       () => playGenRef.current === gen,
       { keepAlive: isRecording },
     )

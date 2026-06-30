@@ -2,7 +2,10 @@ import { useEffect, useState, type ChangeEvent } from 'react'
 import { useStore } from '../state/store'
 import { updateTrackSound } from '@sculptone/score-model'
 import {
-  savePatch, listPatches, loadPatch, deletePatch,
+  savePatch,
+  listPatches,
+  loadPatch,
+  deletePatch,
   type PatchSummary,
 } from '../io/patch-storage'
 import type { Sound } from '@sculptone/score-model'
@@ -10,16 +13,23 @@ import type { Sound } from '@sculptone/score-model'
 // ── 스타일 상수 ────────────────────────────────────────────────
 
 const labelStyle = {
-  fontSize: 11, color: 'var(--text-lo)',
-  display: 'block', marginBottom: 4,
-  textTransform: 'uppercase' as const, letterSpacing: '.08em',
+  fontSize: 11,
+  color: 'var(--text-lo)',
+  display: 'block',
+  marginBottom: 4,
+  textTransform: 'uppercase' as const,
+  letterSpacing: '.08em',
   margin: 0,
 }
 
 const microBtnBase = {
-  font: 'inherit', fontSize: 10, fontWeight: 600,
-  padding: '2px 8px', borderRadius: 'var(--r-sm)',
-  border: '1px solid var(--border)', cursor: 'pointer',
+  font: 'inherit',
+  fontSize: 10,
+  fontWeight: 600,
+  padding: '2px 8px',
+  borderRadius: 'var(--r-sm)',
+  border: '1px solid var(--border)',
+  cursor: 'pointer',
 }
 
 // ── 컴포넌트 ──────────────────────────────────────────────────
@@ -38,23 +48,30 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
   // project 구독 제거: handleLoad 에서 getState()로 최신값 읽어 stale 방지
   const setProject = useStore((s) => s.setProject)
 
-  const [patches,   setPatches]   = useState<PatchSummary[]>([])
+  const [patches, setPatches] = useState<PatchSummary[]>([])
   const [patchName, setPatchName] = useState('')
-  const [saving,    setSaving]    = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
-  const [loading,   setLoading]   = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const refresh = () => {
     setLoading(true)
     void listPatches()
-      .then((list) => { setPatches(list); setError(null) })
-      .catch(() => { setError('패치 목록을 불러오지 못했습니다') })
-      .finally(() => { setLoading(false) })
+      .then((list) => {
+        setPatches(list)
+        setError(null)
+      })
+      .catch(() => {
+        setError('패치 목록을 불러오지 못했습니다')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   useEffect(() => {
     refresh()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleSave = async () => {
@@ -98,7 +115,10 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
   }
 
   return (
-    <section aria-label="Patch Library" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <section
+      aria-label="Patch Library"
+      style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+    >
       {/* ── Save 섹션 ── */}
       <p style={labelStyle}>Save Current Patch</p>
       <div style={{ display: 'flex', gap: 6 }}>
@@ -109,9 +129,14 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
           onChange={(e: ChangeEvent<HTMLInputElement>) => setPatchName(e.target.value)}
           placeholder="Patch name…"
           style={{
-            flex: 1, font: 'inherit', fontSize: 11, padding: '4px 6px',
-            borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
-            background: 'var(--bg-elevated)', color: 'var(--text-mid)',
+            flex: 1,
+            font: 'inherit',
+            fontSize: 11,
+            padding: '4px 6px',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)',
+            color: 'var(--text-mid)',
           }}
         />
         <button
@@ -120,7 +145,8 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
           onClick={() => void handleSave()}
           style={{
             ...microBtnBase,
-            background: 'var(--accent-soft)', color: 'var(--accent)',
+            background: 'var(--accent-soft)',
+            color: 'var(--accent)',
             opacity: !patchName.trim() || saving ? 0.5 : 1,
           }}
         >
@@ -138,24 +164,35 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
       {/* ── Saved Patches 목록 ── */}
       <p style={{ ...labelStyle, marginTop: 6 }}>Saved Patches</p>
       {loading ? (
-        <p style={{ fontSize: 11, color: 'var(--text-lo)', margin: 0 }}>
-          로딩…
-        </p>
+        <p style={{ fontSize: 11, color: 'var(--text-lo)', margin: 0 }}>로딩…</p>
       ) : patches.length === 0 ? (
-        <p style={{ fontSize: 11, color: 'var(--text-lo)', margin: 0 }}>
-          저장된 패치 없음
-        </p>
+        <p style={{ fontSize: 11, color: 'var(--text-lo)', margin: 0 }}>저장된 패치 없음</p>
       ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <ul
+          style={{
+            listStyle: 'none',
+            margin: 0,
+            padding: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
           {patches.map((patch) => (
             <li
               key={patch.id}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}
             >
-              <span style={{
-                flex: 1, fontSize: 11, color: 'var(--text-hi)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
+              <span
+                style={{
+                  flex: 1,
+                  fontSize: 11,
+                  color: 'var(--text-hi)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {patch.name}
               </span>
               <button
@@ -163,7 +200,8 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
                 onClick={() => void handleLoad(patch.id)}
                 style={{
                   ...microBtnBase,
-                  background: 'var(--accent-soft)', color: 'var(--accent)',
+                  background: 'var(--accent-soft)',
+                  color: 'var(--accent)',
                 }}
               >
                 Load
@@ -173,7 +211,8 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
                 onClick={() => void handleDelete(patch.id)}
                 style={{
                   ...microBtnBase,
-                  background: 'transparent', color: 'var(--text-lo)',
+                  background: 'transparent',
+                  color: 'var(--text-lo)',
                 }}
               >
                 ✕

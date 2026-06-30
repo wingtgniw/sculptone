@@ -11,24 +11,37 @@ const PRESETS = listPresets()
 // ── 스타일 상수 ────────────────────────────────────────────────
 
 const labelStyle: CSSProperties = {
-  fontSize: 11, color: 'var(--text-lo)',
-  display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.08em',
+  fontSize: 11,
+  color: 'var(--text-lo)',
+  display: 'block',
+  marginBottom: 4,
+  textTransform: 'uppercase',
+  letterSpacing: '.08em',
 }
 const selectStyle: CSSProperties = {
-  width: '100%', font: 'inherit', fontSize: 11, padding: '4px 6px',
-  borderRadius: 'var(--r-sm)', border: '1px solid var(--border)',
-  background: 'var(--bg-elevated)', color: 'var(--text-mid)', cursor: 'pointer',
+  width: '100%',
+  font: 'inherit',
+  fontSize: 11,
+  padding: '4px 6px',
+  borderRadius: 'var(--r-sm)',
+  border: '1px solid var(--border)',
+  background: 'var(--bg-elevated)',
+  color: 'var(--text-mid)',
+  cursor: 'pointer',
 }
 const sliderRowStyle: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  marginBottom: 6,
 }
 
 // ── 컴포넌트 ──────────────────────────────────────────────────
 
 export function SoundDesignPanel() {
-  const project              = useStore((s) => s.project)
-  const setProject           = useStore((s) => s.setProject)
-  const soundPanelTrackId    = useStore((s) => s.soundPanelTrackId)
+  const project = useStore((s) => s.project)
+  const setProject = useStore((s) => s.setProject)
+  const soundPanelTrackId = useStore((s) => s.soundPanelTrackId)
   const setSoundPanelTrackId = useStore((s) => s.setSoundPanelTrackId)
 
   if (!soundPanelTrackId) return null
@@ -39,8 +52,7 @@ export function SoundDesignPanel() {
 
   // ── 헬퍼 ──────────────────────────────────────────────────
 
-  const commit = (next: Sound) =>
-    setProject(updateTrackSound(project, soundPanelTrackId, next))
+  const commit = (next: Sound) => setProject(updateTrackSound(project, soundPanelTrackId, next))
 
   const updatePatch = (updates: Partial<Extract<Sound, { kind: 'patch' }>>) => {
     if (sound.kind !== 'patch') return
@@ -53,7 +65,7 @@ export function SoundDesignPanel() {
     let tail: number
     if (sound.kind === 'patch') {
       const reverb = (sound.effects ?? []).find(
-        (fx): fx is Extract<typeof fx, { type: 'reverb' }> => fx.type === 'reverb'
+        (fx): fx is Extract<typeof fx, { type: 'reverb' }> => fx.type === 'reverb',
       )
       tail = 0.5 + (sound.envelope.release ?? 0.5) + (reverb?.decay ?? 0)
     } else {
@@ -73,10 +85,19 @@ export function SoundDesignPanel() {
       role="dialog"
       aria-label="Sound Design"
       style={{
-        position: 'fixed', top: 0, right: 0, width: 300, height: '100vh',
-        background: 'var(--bg-panel)', borderLeft: '1px solid var(--border)',
-        overflowY: 'auto', padding: '20px 18px', zIndex: 100,
-        display: 'flex', flexDirection: 'column', gap: 16,
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        width: 300,
+        height: '100vh',
+        background: 'var(--bg-panel)',
+        borderLeft: '1px solid var(--border)',
+        overflowY: 'auto',
+        padding: '20px 18px',
+        zIndex: 100,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
         boxShadow: '-4px 0 16px rgba(0,0,0,.18)',
       }}
     >
@@ -88,7 +109,15 @@ export function SoundDesignPanel() {
         <button
           aria-label="Close sound panel"
           onClick={() => setSoundPanelTrackId(null)}
-          style={{ font: 'inherit', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-lo)', lineHeight: 1 }}
+          style={{
+            font: 'inherit',
+            fontSize: 16,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-lo)',
+            lineHeight: 1,
+          }}
         >
           ✕
         </button>
@@ -106,15 +135,24 @@ export function SoundDesignPanel() {
             }
             style={selectStyle}
           >
-            {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+            {PRESETS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
           </select>
           <button
             aria-label="Switch to custom patch"
             onClick={() => commit(createDefaultPatch())}
             style={{
-              font: 'inherit', fontSize: 11, padding: '5px 10px', borderRadius: 'var(--r-sm)',
-              border: '1px solid var(--border)', cursor: 'pointer',
-              background: 'var(--accent-soft)', color: 'var(--accent)',
+              font: 'inherit',
+              fontSize: 11,
+              padding: '5px 10px',
+              borderRadius: 'var(--r-sm)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              background: 'var(--accent-soft)',
+              color: 'var(--accent)',
             }}
           >
             Switch to Patch
@@ -188,7 +226,15 @@ export function SoundDesignPanel() {
                   }
                   style={{ flex: 1, accentColor: 'var(--accent)' }}
                 />
-                <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
+                <span
+                  style={{
+                    width: 44,
+                    fontSize: 10,
+                    color: 'var(--text-lo)',
+                    textAlign: 'right',
+                    flexShrink: 0,
+                  }}
+                >
                   {(sound.oscillator?.detune ?? 0) > 0
                     ? `+${sound.oscillator?.detune ?? 0}¢`
                     : `${sound.oscillator?.detune ?? 0}¢`}
@@ -202,7 +248,15 @@ export function SoundDesignPanel() {
             <p style={{ ...labelStyle, margin: '0 0 10px' }}>Envelope</p>
             {(['attack', 'decay', 'sustain', 'release'] as const).map((param) => (
               <div key={param} style={sliderRowStyle}>
-                <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0, textTransform: 'capitalize' }}>
+                <label
+                  style={{
+                    width: 52,
+                    fontSize: 11,
+                    color: 'var(--text-lo)',
+                    flexShrink: 0,
+                    textTransform: 'capitalize',
+                  }}
+                >
                   {param}
                 </label>
                 <input
@@ -213,11 +267,21 @@ export function SoundDesignPanel() {
                   step={0.001}
                   value={sound.envelope[param]}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    updatePatch({ envelope: { ...sound.envelope, [param]: Number(e.target.value) } })
+                    updatePatch({
+                      envelope: { ...sound.envelope, [param]: Number(e.target.value) },
+                    })
                   }
                   style={{ flex: 1, accentColor: 'var(--accent)' }}
                 />
-                <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
+                <span
+                  style={{
+                    width: 44,
+                    fontSize: 10,
+                    color: 'var(--text-lo)',
+                    textAlign: 'right',
+                    flexShrink: 0,
+                  }}
+                >
                   {param === 'sustain'
                     ? sound.envelope[param].toFixed(2)
                     : `${Math.round(sound.envelope[param] * 1000)}ms`}
@@ -235,51 +299,76 @@ export function SoundDesignPanel() {
                 aria-label="Enable filter"
                 checked={!!sound.filter}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  updatePatch({ filter: e.target.checked ? { type: 'lowpass', frequency: 2000, Q: 1 } : undefined })
+                  updatePatch({
+                    filter: e.target.checked
+                      ? { type: 'lowpass', frequency: 2000, Q: 1 }
+                      : undefined,
+                  })
                 }
               />
             </div>
-            {sound.filter && (() => {
-              const f = sound.filter
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <select
-                    aria-label="Filter type"
-                    value={f.type}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                      updatePatch({ filter: { ...f, type: e.target.value as 'lowpass' | 'highpass' | 'bandpass' } })
-                    }
-                    style={selectStyle}
-                  >
-                    <option value="lowpass">Low Pass</option>
-                    <option value="highpass">High Pass</option>
-                    <option value="bandpass">Band Pass</option>
-                  </select>
-                  {(['frequency', 'Q'] as const).map((fp) => (
-                    <div key={fp} style={sliderRowStyle}>
-                      <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}>
-                        {fp === 'frequency' ? 'Cutoff' : 'Q'}
-                      </label>
-                      <input
-                        type="range"
-                        aria-label={`Filter ${fp}`}
-                        min={fp === 'frequency' ? 20 : 0}
-                        max={fp === 'frequency' ? 20000 : 20}
-                        step={fp === 'frequency' ? 1 : 0.1}
-                        value={f[fp]}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          updatePatch({ filter: { ...f, [fp]: Number(e.target.value) } })
-                        }
-                        style={{ flex: 1, accentColor: 'var(--accent)' }}
-                      />
-                      <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
-                        {fp === 'frequency' ? `${f.frequency}Hz` : f.Q.toFixed(1)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )
-            })()}
+            {sound.filter &&
+              (() => {
+                const f = sound.filter
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <select
+                      aria-label="Filter type"
+                      value={f.type}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                        updatePatch({
+                          filter: {
+                            ...f,
+                            type: e.target.value as 'lowpass' | 'highpass' | 'bandpass',
+                          },
+                        })
+                      }
+                      style={selectStyle}
+                    >
+                      <option value="lowpass">Low Pass</option>
+                      <option value="highpass">High Pass</option>
+                      <option value="bandpass">Band Pass</option>
+                    </select>
+                    {(['frequency', 'Q'] as const).map((fp) => (
+                      <div key={fp} style={sliderRowStyle}>
+                        <label
+                          style={{
+                            width: 52,
+                            fontSize: 11,
+                            color: 'var(--text-lo)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {fp === 'frequency' ? 'Cutoff' : 'Q'}
+                        </label>
+                        <input
+                          type="range"
+                          aria-label={`Filter ${fp}`}
+                          min={fp === 'frequency' ? 20 : 0}
+                          max={fp === 'frequency' ? 20000 : 20}
+                          step={fp === 'frequency' ? 1 : 0.1}
+                          value={f[fp]}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            updatePatch({ filter: { ...f, [fp]: Number(e.target.value) } })
+                          }
+                          style={{ flex: 1, accentColor: 'var(--accent)' }}
+                        />
+                        <span
+                          style={{
+                            width: 44,
+                            fontSize: 10,
+                            color: 'var(--text-lo)',
+                            textAlign: 'right',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {fp === 'frequency' ? `${f.frequency}Hz` : f.Q.toFixed(1)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
           </section>
 
           {/* LFO */}
@@ -299,75 +388,105 @@ export function SoundDesignPanel() {
                 }
               />
             </div>
-            {sound.lfo && (() => {
-              const lfo = sound.lfo
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <select
-                    aria-label="LFO target"
-                    value={lfo.target}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                      updatePatch({ lfo: { ...lfo, target: e.target.value as 'filter' | 'pitch' | 'amplitude' } })
-                    }
-                    style={selectStyle}
-                  >
-                    <option value="filter">Filter Cutoff</option>
-                    <option value="pitch">Pitch (Vibrato)</option>
-                    <option value="amplitude">Amplitude (Tremolo)</option>
-                  </select>
-
-                  {/* Rate */}
-                  <div style={sliderRowStyle}>
-                    <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}>
-                      Rate
-                    </label>
-                    <input
-                      type="range"
-                      aria-label="LFO rate"
-                      min={0.1}
-                      max={20}
-                      step={0.1}
-                      value={lfo.rate}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        updatePatch({ lfo: { ...lfo, rate: Math.max(0.1, Number(e.target.value)) } })
+            {sound.lfo &&
+              (() => {
+                const lfo = sound.lfo
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <select
+                      aria-label="LFO target"
+                      value={lfo.target}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                        updatePatch({
+                          lfo: {
+                            ...lfo,
+                            target: e.target.value as 'filter' | 'pitch' | 'amplitude',
+                          },
+                        })
                       }
-                      style={{ flex: 1, accentColor: 'var(--accent)' }}
-                    />
-                    <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
-                      {lfo.rate.toFixed(1)}Hz
-                    </span>
-                  </div>
+                      style={selectStyle}
+                    >
+                      <option value="filter">Filter Cutoff</option>
+                      <option value="pitch">Pitch (Vibrato)</option>
+                      <option value="amplitude">Amplitude (Tremolo)</option>
+                    </select>
 
-                  {/* Depth */}
-                  <div style={sliderRowStyle}>
-                    <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}>
-                      Depth
-                    </label>
-                    <input
-                      type="range"
-                      aria-label="LFO depth"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      value={lfo.depth}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        updatePatch({ lfo: { ...lfo, depth: Number(e.target.value) } })
-                      }
-                      style={{ flex: 1, accentColor: 'var(--accent)' }}
-                    />
-                    <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
-                      {Math.round(lfo.depth * 100)}%
-                    </span>
+                    {/* Rate */}
+                    <div style={sliderRowStyle}>
+                      <label
+                        style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}
+                      >
+                        Rate
+                      </label>
+                      <input
+                        type="range"
+                        aria-label="LFO rate"
+                        min={0.1}
+                        max={20}
+                        step={0.1}
+                        value={lfo.rate}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          updatePatch({
+                            lfo: { ...lfo, rate: Math.max(0.1, Number(e.target.value)) },
+                          })
+                        }
+                        style={{ flex: 1, accentColor: 'var(--accent)' }}
+                      />
+                      <span
+                        style={{
+                          width: 44,
+                          fontSize: 10,
+                          color: 'var(--text-lo)',
+                          textAlign: 'right',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {lfo.rate.toFixed(1)}Hz
+                      </span>
+                    </div>
+
+                    {/* Depth */}
+                    <div style={sliderRowStyle}>
+                      <label
+                        style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0 }}
+                      >
+                        Depth
+                      </label>
+                      <input
+                        type="range"
+                        aria-label="LFO depth"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={lfo.depth}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          updatePatch({ lfo: { ...lfo, depth: Number(e.target.value) } })
+                        }
+                        style={{ flex: 1, accentColor: 'var(--accent)' }}
+                      />
+                      <span
+                        style={{
+                          width: 44,
+                          fontSize: 10,
+                          color: 'var(--text-lo)',
+                          textAlign: 'right',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {Math.round(lfo.depth * 100)}%
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )
-            })()}
+                )
+              })()}
           </section>
 
           {/* Reverb */}
           <section>
             {(() => {
-              const reverb = (sound.effects ?? []).find((fx): fx is Extract<typeof fx, { type: 'reverb' }> => fx.type === 'reverb')
+              const reverb = (sound.effects ?? []).find(
+                (fx): fx is Extract<typeof fx, { type: 'reverb' }> => fx.type === 'reverb',
+              )
               const toggleReverb = (e: ChangeEvent<HTMLInputElement>) => {
                 updatePatch({
                   effects: e.target.checked
@@ -379,13 +498,26 @@ export function SoundDesignPanel() {
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
                     <p style={{ ...labelStyle, margin: 0, flex: 1 }}>Reverb</p>
-                    <input type="checkbox" aria-label="Enable reverb" checked={!!reverb} onChange={toggleReverb} />
+                    <input
+                      type="checkbox"
+                      aria-label="Enable reverb"
+                      checked={!!reverb}
+                      onChange={toggleReverb}
+                    />
                   </div>
                   {reverb && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {(['wet', 'decay'] as const).map((rp) => (
                         <div key={rp} style={sliderRowStyle}>
-                          <label style={{ width: 52, fontSize: 11, color: 'var(--text-lo)', flexShrink: 0, textTransform: 'capitalize' }}>
+                          <label
+                            style={{
+                              width: 52,
+                              fontSize: 11,
+                              color: 'var(--text-lo)',
+                              flexShrink: 0,
+                              textTransform: 'capitalize',
+                            }}
+                          >
                             {rp}
                           </label>
                           <input
@@ -398,13 +530,23 @@ export function SoundDesignPanel() {
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                               updatePatch({
                                 effects: (sound.effects ?? []).map((fx) =>
-                                  fx.type === 'reverb' ? { ...fx, [rp]: Number(e.target.value) } : fx
+                                  fx.type === 'reverb'
+                                    ? { ...fx, [rp]: Number(e.target.value) }
+                                    : fx,
                                 ),
                               })
                             }
                             style={{ flex: 1, accentColor: 'var(--accent)' }}
                           />
-                          <span style={{ width: 44, fontSize: 10, color: 'var(--text-lo)', textAlign: 'right', flexShrink: 0 }}>
+                          <span
+                            style={{
+                              width: 44,
+                              fontSize: 10,
+                              color: 'var(--text-lo)',
+                              textAlign: 'right',
+                              flexShrink: 0,
+                            }}
+                          >
                             {rp === 'wet' ? reverb.wet.toFixed(2) : `${reverb.decay.toFixed(1)}s`}
                           </span>
                         </div>
@@ -421,9 +563,14 @@ export function SoundDesignPanel() {
             aria-label="Use preset instead"
             onClick={() => commit({ kind: 'preset', presetId: 'acoustic-piano' })}
             style={{
-              font: 'inherit', fontSize: 11, padding: '5px 10px', borderRadius: 'var(--r-sm)',
-              border: '1px solid var(--border)', cursor: 'pointer',
-              background: 'transparent', color: 'var(--text-lo)',
+              font: 'inherit',
+              fontSize: 11,
+              padding: '5px 10px',
+              borderRadius: 'var(--r-sm)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              background: 'transparent',
+              color: 'var(--text-lo)',
             }}
           >
             Use Preset Instead
@@ -439,9 +586,15 @@ export function SoundDesignPanel() {
         aria-label="Preview sound"
         onClick={handlePreview}
         style={{
-          font: 'inherit', fontSize: 12, fontWeight: 700, padding: '7px 12px',
-          borderRadius: 'var(--r-sm)', border: 'none', cursor: 'pointer',
-          background: 'var(--accent)', color: 'var(--on-accent)',
+          font: 'inherit',
+          fontSize: 12,
+          fontWeight: 700,
+          padding: '7px 12px',
+          borderRadius: 'var(--r-sm)',
+          border: 'none',
+          cursor: 'pointer',
+          background: 'var(--accent)',
+          color: 'var(--on-accent)',
           marginTop: 'auto',
         }}
       >

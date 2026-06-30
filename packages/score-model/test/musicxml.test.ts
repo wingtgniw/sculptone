@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { projectToMusicXML } from '../src/musicxml'
-import {
-  createEmptyProject, createTrack, createNote,
-  addTrack, addNote,
-} from '../src'
-
+import { createEmptyProject, createTrack, createNote, addTrack, addNote } from '../src'
 
 // ── 헬퍼 ──────────────────────────────────────────────────────
 
@@ -14,7 +10,9 @@ function countTag(xml: string, tag: string): number {
   return (xml.match(re) ?? []).length
 }
 
-function makeProject(notes: Array<{pitch:number;start:number;duration:number;velocity:number}> = []) {
+function makeProject(
+  notes: Array<{ pitch: number; start: number; duration: number; velocity: number }> = [],
+) {
   const t = createTrack('Piano')
   let p = addTrack(createEmptyProject('Test'), t)
   for (const n of notes) {

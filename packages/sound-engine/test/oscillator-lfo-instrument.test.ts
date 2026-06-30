@@ -31,31 +31,31 @@ describe('patchToToneConfig — oscillator 매핑', () => {
 
   it('oscillator.type이 square이면 square 반환', () => {
     expect(
-      patchToToneConfig(makePatch({ oscillator: { type: 'square', detune: 0 } })).oscillator.type
+      patchToToneConfig(makePatch({ oscillator: { type: 'square', detune: 0 } })).oscillator.type,
     ).toBe('square')
   })
 
   it('oscillator.type이 sawtooth이면 sawtooth 반환', () => {
     expect(
-      patchToToneConfig(makePatch({ oscillator: { type: 'sawtooth', detune: 0 } })).oscillator.type
+      patchToToneConfig(makePatch({ oscillator: { type: 'sawtooth', detune: 0 } })).oscillator.type,
     ).toBe('sawtooth')
   })
 
   it('oscillator.type이 triangle이면 triangle 반환', () => {
     expect(
-      patchToToneConfig(makePatch({ oscillator: { type: 'triangle', detune: 0 } })).oscillator.type
+      patchToToneConfig(makePatch({ oscillator: { type: 'triangle', detune: 0 } })).oscillator.type,
     ).toBe('triangle')
   })
 
   it('oscillator.detune 양수(100 cents)가 그대로 전달된다', () => {
     expect(
-      patchToToneConfig(makePatch({ oscillator: { type: 'sine', detune: 100 } })).oscillator.detune
+      patchToToneConfig(makePatch({ oscillator: { type: 'sine', detune: 100 } })).oscillator.detune,
     ).toBe(100)
   })
 
   it('oscillator.detune 음수(-50 cents)가 그대로 전달된다', () => {
     expect(
-      patchToToneConfig(makePatch({ oscillator: { type: 'sine', detune: -50 } })).oscillator.detune
+      patchToToneConfig(makePatch({ oscillator: { type: 'sine', detune: -50 } })).oscillator.detune,
     ).toBe(-50)
   })
 })
@@ -108,12 +108,17 @@ describe('patchToToneConfig — lfo 매핑', () => {
 // vi.mock 호이스팅 문제를 피하기 위해 vi.hoisted로 mock 객체를 먼저 정의한다.
 
 const {
-  MockPolySynth, mockPolyInstance,
-  MockFilter, mockFilterInstance,
+  MockPolySynth,
+  mockPolyInstance,
+  MockFilter,
+  mockFilterInstance,
   MockReverb,
-  MockFeedbackDelay, mockDelayInstance,
-  MockLFO, mockLFOInstance,
-  MockGain, mockGainInstance,
+  MockFeedbackDelay,
+  mockDelayInstance,
+  MockLFO,
+  mockLFOInstance,
+  MockGain,
+  mockGainInstance,
 } = vi.hoisted(() => {
   const mockPolyInstance = {
     set: vi.fn(),
@@ -168,12 +173,18 @@ const {
   const MockGain = vi.fn().mockReturnValue(mockGainInstance)
 
   return {
-    MockPolySynth, mockPolyInstance,
-    MockFilter, mockFilterInstance,
-    MockReverb, mockReverbInstance: mockReverbInstance,
-    MockFeedbackDelay, mockDelayInstance,
-    MockLFO, mockLFOInstance,
-    MockGain, mockGainInstance,
+    MockPolySynth,
+    mockPolyInstance,
+    MockFilter,
+    mockFilterInstance,
+    MockReverb,
+    mockReverbInstance: mockReverbInstance,
+    MockFeedbackDelay,
+    mockDelayInstance,
+    MockLFO,
+    mockLFOInstance,
+    MockGain,
+    mockGainInstance,
   }
 })
 
@@ -205,9 +216,7 @@ describe('createInstrumentFromSound — oscillator/LFO 스모크 (Tone mock)', (
     // oscillator.type은 {oscillator:{type}} 형태로, detune은 {detune} 형태로 별도 호출됨
     const oscTypeCall = calls.find(
       (args: unknown[]) =>
-        typeof args[0] === 'object' &&
-        args[0] !== null &&
-        'oscillator' in (args[0] as object),
+        typeof args[0] === 'object' && args[0] !== null && 'oscillator' in (args[0] as object),
     )
     expect(oscTypeCall).toBeDefined()
     const oscArg = (oscTypeCall![0] as { oscillator: { type: string } }).oscillator
@@ -215,9 +224,7 @@ describe('createInstrumentFromSound — oscillator/LFO 스모크 (Tone mock)', (
 
     const detuneCall = calls.find(
       (args: unknown[]) =>
-        typeof args[0] === 'object' &&
-        args[0] !== null &&
-        'detune' in (args[0] as object),
+        typeof args[0] === 'object' && args[0] !== null && 'detune' in (args[0] as object),
     )
     expect(detuneCall).toBeDefined()
     expect((detuneCall![0] as { detune: number }).detune).toBe(100)

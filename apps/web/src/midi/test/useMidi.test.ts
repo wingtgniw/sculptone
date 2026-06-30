@@ -10,9 +10,15 @@ function makeFakeInput(id: string, name: string) {
   return {
     id,
     name,
-    get onmidimessage(): MidiHandler { return _handler },
-    set onmidimessage(fn: MidiHandler) { _handler = fn },
-    _dispatch(data: Uint8Array) { _handler?.({ data }) },
+    get onmidimessage(): MidiHandler {
+      return _handler
+    },
+    set onmidimessage(fn: MidiHandler) {
+      _handler = fn
+    },
+    _dispatch(data: Uint8Array) {
+      _handler?.({ data })
+    },
   }
 }
 
@@ -57,12 +63,18 @@ describe('useMidi', () => {
     const onMessage = vi.fn()
     const { result } = renderHook(() => useMidi(onMessage))
 
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
 
-    act(() => { result.current.selectDevice('device-1') })
+    act(() => {
+      result.current.selectDevice('device-1')
+    })
 
     // noteon 메시지 디스패치
-    act(() => { fakeInput1._dispatch(new Uint8Array([0x90, 60, 100])) })
+    act(() => {
+      fakeInput1._dispatch(new Uint8Array([0x90, 60, 100]))
+    })
 
     expect(onMessage).toHaveBeenCalledWith({ type: 'noteon', pitch: 60, velocity: 100 })
   })
@@ -70,22 +82,36 @@ describe('useMidi', () => {
   it('parseMidiMessage가 null 반환하는 메시지(CC 등)는 콜백을 호출하지 않는다', async () => {
     const onMessage = vi.fn()
     const { result } = renderHook(() => useMidi(onMessage))
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
-    act(() => { result.current.selectDevice('device-1') })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
+    act(() => {
+      result.current.selectDevice('device-1')
+    })
 
     // Control Change → null → 콜백 없음
-    act(() => { fakeInput1._dispatch(new Uint8Array([0xB0, 7, 127])) })
+    act(() => {
+      fakeInput1._dispatch(new Uint8Array([0xb0, 7, 127]))
+    })
     expect(onMessage).not.toHaveBeenCalled()
   })
 
   it('장치 선택 해제(null) 시 메시지 수신이 중단된다', async () => {
     const onMessage = vi.fn()
     const { result } = renderHook(() => useMidi(onMessage))
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
 
-    act(() => { result.current.selectDevice('device-1') })
-    act(() => { result.current.selectDevice(null) })
-    act(() => { fakeInput1._dispatch(new Uint8Array([0x90, 60, 100])) })
+    act(() => {
+      result.current.selectDevice('device-1')
+    })
+    act(() => {
+      result.current.selectDevice(null)
+    })
+    act(() => {
+      fakeInput1._dispatch(new Uint8Array([0x90, 60, 100]))
+    })
 
     expect(onMessage).not.toHaveBeenCalled()
   })
@@ -104,9 +130,7 @@ describe('useMidi', () => {
   // A-1: 장치 핫플러그 — statechange 후 devices 갱신
   it('hotplug: statechange 이후 devices가 새 장치를 포함해 갱신된다', async () => {
     const hotInput1 = makeFakeInput('device-1', 'Test Piano')
-    const hotInputs = new Map<string, ReturnType<typeof makeFakeInput>>([
-      ['device-1', hotInput1],
-    ])
+    const hotInputs = new Map<string, ReturnType<typeof makeFakeInput>>([['device-1', hotInput1]])
     const hotAccess = {
       inputs: hotInputs,
       onstatechange: null as ((e: unknown) => void) | null,
@@ -117,14 +141,20 @@ describe('useMidi', () => {
 
     const { result } = renderHook(() => useMidi(() => {}))
 
-    await waitFor(() => { expect(result.current.devices).toHaveLength(1) })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(1)
+    })
 
     // 새 장치 추가 후 statechange 트리거
     const hotInput2 = makeFakeInput('device-2', 'Test Drum')
     hotInputs.set('device-2', hotInput2)
-    act(() => { hotAccess.onstatechange?.({}) })
+    act(() => {
+      hotAccess.onstatechange?.({})
+    })
 
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
     expect(result.current.devices.map((d) => d.id)).toContain('device-2')
   })
 
@@ -133,22 +163,26 @@ describe('useMidi', () => {
     const onMessage = vi.fn()
     const { result, unmount } = renderHook(() => useMidi(onMessage))
 
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
-    act(() => { result.current.selectDevice('device-1') })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
+    act(() => {
+      result.current.selectDevice('device-1')
+    })
 
     unmount()
 
     // 언마운트 후 메시지 수신 → 콜백 미호출
-    act(() => { fakeInput1._dispatch(new Uint8Array([0x90, 60, 100])) })
+    act(() => {
+      fakeInput1._dispatch(new Uint8Array([0x90, 60, 100]))
+    })
     expect(onMessage).not.toHaveBeenCalled()
   })
 
   // B-1: 접근 거부 에러 처리
   it('requestMIDIAccess 거부 시 accessError=SecurityError, devices=[]', async () => {
     vi.stubGlobal('navigator', {
-      requestMIDIAccess: vi.fn().mockRejectedValue(
-        new DOMException('denied', 'SecurityError'),
-      ),
+      requestMIDIAccess: vi.fn().mockRejectedValue(new DOMException('denied', 'SecurityError')),
     })
 
     const { result } = renderHook(() => useMidi(() => {}))
@@ -164,17 +198,27 @@ describe('useMidi', () => {
     const onMessage = vi.fn()
     const { result } = renderHook(() => useMidi(onMessage))
 
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
 
-    act(() => { result.current.selectDevice('device-1') })
-    act(() => { result.current.selectDevice('device-2') })
+    act(() => {
+      result.current.selectDevice('device-1')
+    })
+    act(() => {
+      result.current.selectDevice('device-2')
+    })
 
     // device-1 메시지 → 수신 안 됨
-    act(() => { fakeInput1._dispatch(new Uint8Array([0x90, 60, 100])) })
+    act(() => {
+      fakeInput1._dispatch(new Uint8Array([0x90, 60, 100]))
+    })
     expect(onMessage).not.toHaveBeenCalled()
 
     // device-2 메시지 → 수신
-    act(() => { fakeInput2._dispatch(new Uint8Array([0x90, 60, 100])) })
+    act(() => {
+      fakeInput2._dispatch(new Uint8Array([0x90, 60, 100]))
+    })
     expect(onMessage).toHaveBeenCalledWith({ type: 'noteon', pitch: 60, velocity: 100 })
   })
 
@@ -185,14 +229,20 @@ describe('useMidi', () => {
     let cb = onMessage1
     const { result, rerender } = renderHook(() => useMidi(cb))
 
-    await waitFor(() => { expect(result.current.devices).toHaveLength(2) })
-    act(() => { result.current.selectDevice('device-1') })
+    await waitFor(() => {
+      expect(result.current.devices).toHaveLength(2)
+    })
+    act(() => {
+      result.current.selectDevice('device-1')
+    })
 
     // 콜백 교체 후 rerender
     cb = onMessage2
     rerender()
 
-    act(() => { fakeInput1._dispatch(new Uint8Array([0x90, 60, 100])) })
+    act(() => {
+      fakeInput1._dispatch(new Uint8Array([0x90, 60, 100]))
+    })
     expect(onMessage2).toHaveBeenCalledWith({ type: 'noteon', pitch: 60, velocity: 100 })
     expect(onMessage1).not.toHaveBeenCalled()
   })

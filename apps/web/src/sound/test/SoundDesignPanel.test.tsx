@@ -20,8 +20,8 @@ vi.mock('../PatchLibrary', () => ({
 vi.mock('@sculptone/sound-engine', () => ({
   listPresets: vi.fn(() => [
     { id: 'acoustic-piano', label: 'Acoustic Piano', kind: 'sampler', source: 'salamander' },
-    { id: 'synth-lead',     label: 'Synth Lead',     kind: 'synth',   source: 'Synth' },
-    { id: 'electric-piano', label: 'Electric Piano', kind: 'synth',   source: 'AMSynth' },
+    { id: 'synth-lead', label: 'Synth Lead', kind: 'synth', source: 'Synth' },
+    { id: 'electric-piano', label: 'Electric Piano', kind: 'synth', source: 'AMSynth' },
   ]),
   createInstrumentFromSound: vi.fn(() => ({
     triggerAttackRelease: vi.fn(),
@@ -100,7 +100,9 @@ describe('SoundDesignPanel', () => {
     render(<SoundDesignPanel />)
     await userEvent.selectOptions(screen.getByRole('combobox', { name: /synth engine/i }), 'fm')
     const updated = useStore.getState().project.tracks[0]!
-    expect(updated.sound.kind === 'patch' && (updated.sound as { engine: string }).engine).toBe('fm')
+    expect(updated.sound.kind === 'patch' && (updated.sound as { engine: string }).engine).toBe(
+      'fm',
+    )
   })
 
   it('Attack 슬라이더 변경 시 envelope.attack이 갱신된다', () => {
@@ -109,7 +111,9 @@ describe('SoundDesignPanel', () => {
     s.setProject(updateTrackSound(s.project, trackId, BASE_PATCH))
     s.setSoundPanelTrackId(trackId)
     render(<SoundDesignPanel />)
-    fireEvent.change(screen.getByRole('slider', { name: /envelope attack/i }), { target: { value: '0.5' } })
+    fireEvent.change(screen.getByRole('slider', { name: /envelope attack/i }), {
+      target: { value: '0.5' },
+    })
     const updated = useStore.getState().project.tracks[0]!
     expect(updated.sound.kind).toBe('patch')
     if (updated.sound.kind === 'patch') expect(updated.sound.envelope.attack).toBeCloseTo(0.5)
@@ -152,7 +156,9 @@ describe('SoundDesignPanel', () => {
     s.setSoundPanelTrackId(s.selectedTrackId)
     render(<SoundDesignPanel />)
     expect(screen.getByRole('button', { name: /preview sound/i })).toBeInTheDocument()
-    await expect(userEvent.click(screen.getByRole('button', { name: /preview sound/i }))).resolves.not.toThrow()
+    await expect(
+      userEvent.click(screen.getByRole('button', { name: /preview sound/i })),
+    ).resolves.not.toThrow()
   })
 
   it('"Use Preset Instead" 버튼 클릭 시 sound.kind가 preset으로 돌아온다', async () => {
@@ -168,14 +174,16 @@ describe('SoundDesignPanel', () => {
   it('reverb decay 슬라이더의 min은 0.1이고 wet 슬라이더의 min은 0이다(Fix 1 회귀)', async () => {
     const s = useStore.getState()
     const trackId = s.selectedTrackId
-    s.setProject(updateTrackSound(s.project, trackId, {
-      ...BASE_PATCH,
-      effects: [{ type: 'reverb' as const, wet: 0.3, decay: 2 }],
-    }))
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        ...BASE_PATCH,
+        effects: [{ type: 'reverb' as const, wet: 0.3, decay: 2 }],
+      }),
+    )
     s.setSoundPanelTrackId(trackId)
     render(<SoundDesignPanel />)
     const decaySlider = screen.getByRole('slider', { name: /reverb decay/i })
-    const wetSlider   = screen.getByRole('slider', { name: /reverb wet/i })
+    const wetSlider = screen.getByRole('slider', { name: /reverb wet/i })
     expect(decaySlider).toHaveAttribute('min', '0.1')
     expect(wetSlider).toHaveAttribute('min', '0')
   })
@@ -221,11 +229,13 @@ describe('SoundDesignPanel — Oscillator 섹션', () => {
   function openPatchPanel() {
     const s = useStore.getState()
     const trackId = s.selectedTrackId
-    s.setProject(updateTrackSound(s.project, trackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-    }))
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      }),
+    )
     s.setSoundPanelTrackId(trackId)
   }
 
@@ -243,9 +253,7 @@ describe('SoundDesignPanel — Oscillator 섹션', () => {
       'square',
     )
     const updated = useStore.getState().project.tracks[0]!
-    expect(
-      updated.sound.kind === 'patch' && updated.sound.oscillator?.type
-    ).toBe('square')
+    expect(updated.sound.kind === 'patch' && updated.sound.oscillator?.type).toBe('square')
   })
 
   it('patch 모드에서 Oscillator Detune 슬라이더가 표시된다', () => {
@@ -257,14 +265,11 @@ describe('SoundDesignPanel — Oscillator 섹션', () => {
   it('Detune 슬라이더 변경 시 sound.oscillator.detune이 갱신된다', () => {
     openPatchPanel()
     render(<SoundDesignPanel />)
-    fireEvent.change(
-      screen.getByRole('slider', { name: /oscillator detune/i }),
-      { target: { value: '200' } },
-    )
+    fireEvent.change(screen.getByRole('slider', { name: /oscillator detune/i }), {
+      target: { value: '200' },
+    })
     const updated = useStore.getState().project.tracks[0]!
-    expect(
-      updated.sound.kind === 'patch' && updated.sound.oscillator?.detune
-    ).toBe(200)
+    expect(updated.sound.kind === 'patch' && updated.sound.oscillator?.detune).toBe(200)
   })
 })
 
@@ -277,11 +282,13 @@ describe('SoundDesignPanel — LFO 섹션', () => {
   function openPatchPanel() {
     const s = useStore.getState()
     const trackId = s.selectedTrackId
-    s.setProject(updateTrackSound(s.project, trackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-    }))
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+      }),
+    )
     s.setSoundPanelTrackId(trackId)
   }
 
@@ -305,24 +312,27 @@ describe('SoundDesignPanel — LFO 섹션', () => {
     render(<SoundDesignPanel />)
     await userEvent.click(screen.getByRole('checkbox', { name: /lfo enable/i }))
     const updated = useStore.getState().project.tracks[0]!
-    expect(updated.sound.kind === 'patch' && updated.sound.lfo).toEqual({ target: 'amplitude', rate: 1, depth: 0.5 })
+    expect(updated.sound.kind === 'patch' && updated.sound.lfo).toEqual({
+      target: 'amplitude',
+      rate: 1,
+      depth: 0.5,
+    })
   })
 
   it('LFO rate 슬라이더 변경 시 sound.lfo.rate가 갱신된다', async () => {
     openPatchPanel()
     const s = useStore.getState()
     // LFO 있는 patch로 설정
-    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-      lfo: { target: 'filter', rate: 1, depth: 0.5 },
-    }))
-    render(<SoundDesignPanel />)
-    fireEvent.change(
-      screen.getByRole('slider', { name: /lfo rate/i }),
-      { target: { value: '5' } },
+    s.setProject(
+      updateTrackSound(s.project, s.selectedTrackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+        lfo: { target: 'filter', rate: 1, depth: 0.5 },
+      }),
     )
+    render(<SoundDesignPanel />)
+    fireEvent.change(screen.getByRole('slider', { name: /lfo rate/i }), { target: { value: '5' } })
     const updated = useStore.getState().project.tracks[0]!
     expect(updated.sound.kind === 'patch' && updated.sound.lfo?.rate).toBe(5)
   })
@@ -330,17 +340,16 @@ describe('SoundDesignPanel — LFO 섹션', () => {
   it('LFO target select 변경 시 sound.lfo.target이 갱신된다', async () => {
     openPatchPanel()
     const s = useStore.getState()
-    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-      lfo: { target: 'amplitude', rate: 1, depth: 0.5 },
-    }))
-    render(<SoundDesignPanel />)
-    await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: /lfo target/i }),
-      'filter',
+    s.setProject(
+      updateTrackSound(s.project, s.selectedTrackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+        lfo: { target: 'amplitude', rate: 1, depth: 0.5 },
+      }),
     )
+    render(<SoundDesignPanel />)
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: /lfo target/i }), 'filter')
     const updated = useStore.getState().project.tracks[0]!
     expect(updated.sound.kind === 'patch' && updated.sound.lfo?.target).toBe('filter')
   })
@@ -348,17 +357,18 @@ describe('SoundDesignPanel — LFO 섹션', () => {
   it('LFO depth 슬라이더 변경 시 sound.lfo.depth가 갱신된다', () => {
     openPatchPanel()
     const s = useStore.getState()
-    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-      lfo: { target: 'amplitude', rate: 1, depth: 0.5 },
-    }))
-    render(<SoundDesignPanel />)
-    fireEvent.change(
-      screen.getByRole('slider', { name: /lfo depth/i }),
-      { target: { value: '0.8' } },
+    s.setProject(
+      updateTrackSound(s.project, s.selectedTrackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+        lfo: { target: 'amplitude', rate: 1, depth: 0.5 },
+      }),
     )
+    render(<SoundDesignPanel />)
+    fireEvent.change(screen.getByRole('slider', { name: /lfo depth/i }), {
+      target: { value: '0.8' },
+    })
     const updated = useStore.getState().project.tracks[0]!
     expect(updated.sound.kind === 'patch' && updated.sound.lfo?.depth).toBeCloseTo(0.8)
   })
@@ -366,12 +376,14 @@ describe('SoundDesignPanel — LFO 섹션', () => {
   it('LFO Enable 체크박스 비활성화 시 sound.lfo가 undefined가 된다', async () => {
     openPatchPanel()
     const s = useStore.getState()
-    s.setProject(updateTrackSound(s.project, s.selectedTrackId, {
-      kind: 'patch' as const,
-      engine: 'synth' as const,
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
-      lfo: { target: 'pitch', rate: 2, depth: 0.3 },
-    }))
+    s.setProject(
+      updateTrackSound(s.project, s.selectedTrackId, {
+        kind: 'patch' as const,
+        engine: 'synth' as const,
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 },
+        lfo: { target: 'pitch', rate: 2, depth: 0.3 },
+      }),
+    )
     render(<SoundDesignPanel />)
     await userEvent.click(screen.getByRole('checkbox', { name: /lfo enable/i }))
     const updated = useStore.getState().project.tracks[0]!

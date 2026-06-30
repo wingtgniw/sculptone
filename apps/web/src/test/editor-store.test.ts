@@ -3,7 +3,9 @@ import { useStore } from '../state/store'
 import { createEmptyProject, createTrack, addTrack } from '@sculptone/score-model'
 
 describe('editor store', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('초기 selectedTrackId는 첫 트랙, selectedNoteId는 null', () => {
     const s = useStore.getState()
@@ -17,13 +19,16 @@ describe('editor store', () => {
   })
   it('selectTrack / selectNote / setQuantizeDenom / setPlaying 동작', () => {
     const { selectNote, selectTrack, setQuantizeDenom, setPlaying } = useStore.getState()
-    selectNote('n1'); expect(useStore.getState().selectedNoteId).toBe('n1')
+    selectNote('n1')
+    expect(useStore.getState().selectedNoteId).toBe('n1')
     // selectTrack은 트랙을 갱신하면서 노트 선택을 초기화한다(부수효과)
     selectTrack('track-x')
     expect(useStore.getState().selectedTrackId).toBe('track-x')
     expect(useStore.getState().selectedNoteId).toBeNull()
-    setQuantizeDenom(8); expect(useStore.getState().quantizeDenom).toBe(8)
-    setPlaying(true); expect(useStore.getState().isPlaying).toBe(true)
+    setQuantizeDenom(8)
+    expect(useStore.getState().quantizeDenom).toBe(8)
+    setPlaying(true)
+    expect(useStore.getState().isPlaying).toBe(true)
   })
 
   it('replaceProject는 새 첫 트랙으로 selectedTrackId를 갱신하고 selectedNoteId를 null로 설정', () => {

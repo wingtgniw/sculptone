@@ -36,8 +36,17 @@ export interface FilterConfig {
   Q: number
 }
 
-export interface ReverbConfig { type: 'reverb'; wet: number; decay: number }
-export interface DelayConfig  { type: 'delay'; wet: number; time: number; feedback: number }
+export interface ReverbConfig {
+  type: 'reverb'
+  wet: number
+  decay: number
+}
+export interface DelayConfig {
+  type: 'delay'
+  wet: number
+  time: number
+  feedback: number
+}
 export type EffectConfig = ReverbConfig | DelayConfig
 
 /** 오실레이터 파형 설정. type: 기본 파형 4종. detune: 정적 cents 오프셋. */
@@ -54,8 +63,8 @@ export interface OscillatorConfig {
  */
 export interface LFOConfig {
   target: 'filter' | 'pitch' | 'amplitude'
-  rate: number   // Hz
-  depth: number  // 0..1
+  rate: number // Hz
+  depth: number // 0..1
 }
 
 export interface PatchInput {
@@ -84,9 +93,7 @@ export interface PatchInstrument {
   dispose: () => void
 }
 
-export type SoundInput =
-  | { kind: 'preset'; presetId: string }
-  | ({ kind: 'patch' } & PatchInput)
+export type SoundInput = { kind: 'preset'; presetId: string } | ({ kind: 'patch' } & PatchInput)
 
 // ── patchToToneConfig (순수 — Tone 의존 없음) ──────────────────
 

@@ -5,16 +5,16 @@ const STORE_NAME = 'patches' as const
 
 /** patches store 레코드 전체 (soundJson 포함) */
 export interface SavedPatch {
-  id:        string
-  name:      string
-  soundJson: string   // JSON.stringify(Sound)
-  createdAt: string   // ISO 8601
+  id: string
+  name: string
+  soundJson: string // JSON.stringify(Sound)
+  createdAt: string // ISO 8601
 }
 
 /** listPatches() 반환 타입 (soundJson 제외 — 목록 표시용) */
 export interface PatchSummary {
-  id:        string
-  name:      string
+  id: string
+  name: string
   createdAt: string
 }
 
@@ -29,8 +29,8 @@ export async function savePatch(name: string, sound: Sound): Promise<SavedPatch>
 
   const db = await getDB()
   const record: SavedPatch = {
-    id:        crypto.randomUUID(),
-    name:      trimmed,
+    id: crypto.randomUUID(),
+    name: trimmed,
     soundJson: JSON.stringify(sound),
     createdAt: new Date().toISOString(),
   }
@@ -43,7 +43,7 @@ export async function savePatch(name: string, sound: Sound): Promise<SavedPatch>
  * createdAt 오름차순으로 정렬한다(먼저 저장된 항목이 상단).
  */
 export async function listPatches(): Promise<PatchSummary[]> {
-  const db  = await getDB()
+  const db = await getDB()
   const all = await db.getAll(STORE_NAME)
   return all
     .map(({ id, name, createdAt }) => ({ id, name, createdAt }))
@@ -56,7 +56,7 @@ export async function listPatches(): Promise<PatchSummary[]> {
  * @throws {ZodError} 레코드가 손상되어 SoundSchema를 통과하지 못할 때
  */
 export async function loadPatch(id: string): Promise<Sound | undefined> {
-  const db     = await getDB()
+  const db = await getDB()
   const record = await db.get(STORE_NAME, id)
   if (!record) return undefined
   // Zod 검증: 저장 시점 이후 스키마 변경이 있더라도 안전하게 파싱

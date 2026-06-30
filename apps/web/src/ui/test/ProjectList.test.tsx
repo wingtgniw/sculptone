@@ -8,12 +8,12 @@ import type { ProjectSummary } from '../../io/storage'
 // vi.mock은 호이스팅되므로, 팩토리 내에서 참조할 변수는 vi.hoisted()로 정의해야 한다
 const mockSummaries: ProjectSummary[] = vi.hoisted(() => [
   { id: 'id-1', title: 'Alpha', updatedAt: '2026-06-01T00:00:00.000Z' },
-  { id: 'id-2', title: 'Beta',  updatedAt: '2026-06-02T00:00:00.000Z' },
+  { id: 'id-2', title: 'Beta', updatedAt: '2026-06-02T00:00:00.000Z' },
 ])
 
 vi.mock('../../io/storage', () => ({
   listProjects: vi.fn().mockResolvedValue(mockSummaries),
-  loadProject:  vi.fn().mockImplementation(async (id: string) => {
+  loadProject: vi.fn().mockImplementation(async (id: string) => {
     if (id === 'id-1') {
       const { createEmptyProject } = await import('@sculptone/score-model')
       const p = createEmptyProject('Alpha')

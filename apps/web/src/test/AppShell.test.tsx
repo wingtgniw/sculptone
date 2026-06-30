@@ -5,7 +5,9 @@ import { AppShell } from '../shell/AppShell'
 import { useStore } from '../state/store'
 import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 
-vi.mock('../audio/useAudio', () => ({ useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }) }))
+vi.mock('../audio/useAudio', () => ({
+  useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }),
+}))
 vi.mock('../io/useAutosave', () => ({ useAutosave: () => {} }))
 vi.mock('../midi/useMidi', () => ({
   useMidi: () => ({

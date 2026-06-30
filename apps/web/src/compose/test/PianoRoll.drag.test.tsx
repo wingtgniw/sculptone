@@ -81,7 +81,9 @@ describe('PianoRoll drag smoke', () => {
 
   it('3px 미만 이동(클릭)이면 드래그 없이 노트만 선택된다', () => {
     // 선택을 먼저 비운다
-    act(() => { useStore.getState().selectNote(null) })
+    act(() => {
+      useStore.getState().selectNote(null)
+    })
     render(<PianoRoll />)
     const noteEl = screen.getByTestId('note')
     const container = screen.getByTestId('pianoroll')
@@ -181,7 +183,9 @@ describe('PianoRoll drag smoke', () => {
   it('생성 후 즉시 드래그해도 undo 1회가 드래그만 되돌리고 노트는 남는다 (Fix #3)', () => {
     // beforeEach에서 노트가 추가된 후 _lastEditAt > 0.
     // 실제 그리드 클릭의 pointerup → endEdit()이 경계를 닫는 것을 시뮬레이션.
-    act(() => { useStore.getState().endEdit() })
+    act(() => {
+      useStore.getState().endEdit()
+    })
 
     const beforePastLen = useStore.getState().history.past.length
 
@@ -200,7 +204,9 @@ describe('PianoRoll drag smoke', () => {
     expect(useStore.getState().history.past.length).toBe(beforePastLen + 1)
 
     // undo 1회: 이동만 취소, 노트는 여전히 존재
-    act(() => { useStore.getState().undo() })
+    act(() => {
+      useStore.getState().undo()
+    })
 
     const tid = useStore.getState().selectedTrackId
     const notes = useStore.getState().project.tracks.find((t) => t.id === tid)!.notes
@@ -215,9 +221,9 @@ describe('PianoRoll drag smoke', () => {
     const noteEl = screen.getByTestId('note')
     const container = screen.getByTestId('pianoroll')
 
-    const initialPitch = useStore.getState().project.tracks
-      .find((t) => t.id === useStore.getState().selectedTrackId)!
-      .notes[0]!.pitch // 60 (beforeEach에서 설정)
+    const initialPitch = useStore
+      .getState()
+      .project.tracks.find((t) => t.id === useStore.getState().selectedTrackId)!.notes[0]!.pitch // 60 (beforeEach에서 설정)
 
     // dy=48px (laneHeight=24 × 2레인) 아래로 이동, clientX 고정
     // pxToSemitones(48, 24) = -2 → pitch = 60 - 2 = 58

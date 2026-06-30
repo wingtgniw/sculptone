@@ -7,8 +7,15 @@ import { useStore } from '../state/store'
 import { addNote, removeNote, createNote, updateNote } from '@sculptone/score-model'
 import type { Note } from '@sculptone/score-model'
 import {
-  tickToX, xToTick, pitchToY, yToPitch, durationToWidth,
-  rollHeight, LANE_HEIGHT, NOTE_HEIGHT, PX_PER_BEAT,
+  tickToX,
+  xToTick,
+  pitchToY,
+  yToPitch,
+  durationToWidth,
+  rollHeight,
+  LANE_HEIGHT,
+  NOTE_HEIGHT,
+  PX_PER_BEAT,
 } from './geometry'
 import { divisionToTicks, snap } from './quantize'
 import { pxToTicks, pxToSemitones, computeMove, computeResize } from './drag'
@@ -48,7 +55,9 @@ export function PianoRoll() {
 
   const handleGridPointerDown = (e: RPointerEvent<HTMLDivElement>) => {
     // 방어: pointercancel 등으로 stale dragRef가 남아 있으면 초기화.
-    if (dragRef.current) { dragRef.current = null }
+    if (dragRef.current) {
+      dragRef.current = null
+    }
     // 노트/핸들 위 pointerdown은 stopPropagation으로 여기 도달하지 않음.
     // Belt-and-suspenders: e.target !== e.currentTarget 가드도 유지.
     if (e.target !== e.currentTarget) return
@@ -88,7 +97,9 @@ export function PianoRoll() {
     }
     // setPointerCapture: 포인터가 노트 밖으로 나가도 pointermove/up 이 노트 → 컨테이너로 버블링됨.
     // jsdom 미지원 시 try/catch로 무시; 컨테이너 onPointerMove 직접 발사로 대체 가능.
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {}
   }
 
   // ── 드래그 시작: 리사이즈 핸들 ──────────────────────────────────
@@ -106,7 +117,9 @@ export function PianoRoll() {
       type: 'resize',
       moved: false,
     }
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {}
   }
 
   // ── 드래그 진행: 컨테이너 pointermove ────────────────────────────
@@ -127,12 +140,7 @@ export function PianoRoll() {
     const currentProject = useStore.getState().project
 
     if (type === 'move') {
-      const patch = computeMove(
-        origNote,
-        pxToTicks(dx, ppq),
-        pxToSemitones(dy, LANE_HEIGHT),
-        grid,
-      )
+      const patch = computeMove(origNote, pxToTicks(dx, ppq), pxToSemitones(dy, LANE_HEIGHT), grid)
       setProject(updateNote(currentProject, selectedTrackId, noteId, patch))
     } else {
       const patch = computeResize(origNote, pxToTicks(dx, ppq), grid)
@@ -143,7 +151,9 @@ export function PianoRoll() {
   // ── 드래그 종료: 컨테이너 pointerup ──────────────────────────────
 
   // Fix #5: pointercancel / lostpointercapture 시 stale dragRef 정리.
-  const handleDragRelease = () => { dragRef.current = null }
+  const handleDragRelease = () => {
+    dragRef.current = null
+  }
 
   const handleContainerPointerUp = (_e: RPointerEvent<HTMLDivElement>) => {
     // Fix #3: 제스처 경계를 닫아 다음 편집이 별도 undo 스텝이 되게 한다.

@@ -3,7 +3,9 @@ import { useStore } from '../state/store'
 import { tickToX } from './geometry'
 import { secondsToTicks } from './time'
 
-interface Props { getSeconds: () => number }
+interface Props {
+  getSeconds: () => number
+}
 
 export function Playhead({ getSeconds }: Props) {
   const ref = useRef<HTMLDivElement>(null)
@@ -30,9 +32,19 @@ export function Playhead({ getSeconds }: Props) {
   }, [isPlaying, getSeconds, ppq, tempo])
 
   return (
-    <div ref={ref} data-testid="playhead" style={{
-      position: 'absolute', top: 0, bottom: 0, left: 0, width: 2,
-      background: 'var(--accent)', boxShadow: '0 0 10px var(--accent)', pointerEvents: 'none',
-    }} />
+    <div
+      ref={ref}
+      data-testid="playhead"
+      style={{
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        width: 2,
+        background: 'var(--accent)',
+        boxShadow: '0 0 10px var(--accent)',
+        pointerEvents: 'none',
+      }}
+    />
   )
 }

@@ -1,7 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import {
-  LANE_HEIGHT, PX_PER_BEAT, PITCH_LOW, PITCH_HIGH,
-  pxPerTick, tickToX, xToTick, pitchToY, yToPitch, durationToWidth, rollHeight,
+  LANE_HEIGHT,
+  PX_PER_BEAT,
+  PITCH_LOW,
+  PITCH_HIGH,
+  pxPerTick,
+  tickToX,
+  xToTick,
+  pitchToY,
+  yToPitch,
+  durationToWidth,
+  rollHeight,
 } from '../geometry'
 
 describe('geometry', () => {

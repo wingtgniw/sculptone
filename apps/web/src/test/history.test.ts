@@ -1,13 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  createHistory,
-  record,
-  undo,
-  redo,
-  canUndo,
-  canRedo,
-  type History,
-} from '../state/history'
+import { createHistory, record, undo, redo, canUndo, canRedo, type History } from '../state/history'
 
 // ── createHistory ────────────────────────────────────────────
 
@@ -69,9 +61,9 @@ describe('record', () => {
   })
 
   it('coalesce=true: present만 교체하고 past는 그대로이다', () => {
-    const h0 = record(createHistory('a'), 'b')         // past=['a'], present='b'
-    const hC = record(h0, 'b2', { coalesce: true })    // 코얼레싱
-    expect(hC.past).toEqual(['a'])                      // past 불변
+    const h0 = record(createHistory('a'), 'b') // past=['a'], present='b'
+    const hC = record(h0, 'b2', { coalesce: true }) // 코얼레싱
+    expect(hC.past).toEqual(['a']) // past 불변
     expect(hC.present).toBe('b2')
     expect(hC.future).toEqual([])
   })
@@ -92,12 +84,12 @@ describe('record', () => {
   it('cap: past가 cap을 초과하면 가장 오래된 항목을 제거한다', () => {
     // cap=3: a→b→c→d 기록 시 past=['b','c','d'], present='d+1'
     let h: History<string> = createHistory('a')
-    h = record(h, 'b', { cap: 3 })  // past=['a']
-    h = record(h, 'c', { cap: 3 })  // past=['a','b']
-    h = record(h, 'd', { cap: 3 })  // past=['a','b','c']
-    h = record(h, 'e', { cap: 3 })  // cap 초과 → past=['b','c','d']
+    h = record(h, 'b', { cap: 3 }) // past=['a']
+    h = record(h, 'c', { cap: 3 }) // past=['a','b']
+    h = record(h, 'd', { cap: 3 }) // past=['a','b','c']
+    h = record(h, 'e', { cap: 3 }) // cap 초과 → past=['b','c','d']
     expect(h.past).toHaveLength(3)
-    expect(h.past[0]).toBe('b')      // 'a'가 제거됨
+    expect(h.past[0]).toBe('b') // 'a'가 제거됨
     expect(h.past[2]).toBe('d')
     expect(h.present).toBe('e')
   })
@@ -125,8 +117,8 @@ describe('undo', () => {
 
   it('연속 undo: 두 번 undo 시 처음 상태로 돌아간다', () => {
     let h = record(record(createHistory('a'), 'b'), 'c')
-    h = undo(h)  // present='b', past=['a'], future=['c']
-    h = undo(h)  // present='a', past=[], future=['b','c']
+    h = undo(h) // present='b', past=['a'], future=['c']
+    h = undo(h) // present='a', past=[], future=['b','c']
     expect(h.present).toBe('a')
     expect(h.past).toEqual([])
     expect(h.future).toEqual(['b', 'c'])
@@ -135,7 +127,7 @@ describe('undo', () => {
   it('past가 비어있을 때 undo는 히스토리를 그대로 반환한다(no-op)', () => {
     const h = createHistory('a')
     const after = undo(h)
-    expect(after).toBe(h)  // 동일 참조 (no-op)
+    expect(after).toBe(h) // 동일 참조 (no-op)
   })
 })
 
@@ -151,9 +143,9 @@ describe('redo', () => {
 
   it('연속 redo: undo 두 번 후 redo 두 번으로 원래 상태 복원', () => {
     let h = record(record(createHistory('a'), 'b'), 'c')
-    h = undo(undo(h))  // present='a', future=['b','c']
-    h = redo(h)        // present='b', future=['c']
-    h = redo(h)        // present='c', future=[]
+    h = undo(undo(h)) // present='a', future=['b','c']
+    h = redo(h) // present='b', future=['c']
+    h = redo(h) // present='c', future=[]
     expect(h.present).toBe('c')
     expect(h.past).toEqual(['a', 'b'])
     expect(h.future).toEqual([])
@@ -162,6 +154,6 @@ describe('redo', () => {
   it('future가 비어있을 때 redo는 히스토리를 그대로 반환한다(no-op)', () => {
     const h = createHistory('a')
     const after = redo(h)
-    expect(after).toBe(h)  // 동일 참조 (no-op)
+    expect(after).toBe(h) // 동일 참조 (no-op)
   })
 })

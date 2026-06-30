@@ -20,31 +20,31 @@ export async function saveProject(project: Project): Promise<void> {
     metadata: { ...project.metadata, updatedAt: now },
   }
   await db.put(STORE_NAME, {
-    id:        stamped.id,
-    title:     stamped.metadata.title,
+    id: stamped.id,
+    title: stamped.metadata.title,
     updatedAt: now,
-    data:      serializeProject(stamped),
+    data: serializeProject(stamped),
   })
 }
 
 /** ID로 프로젝트 로드. 없으면 undefined. */
 export async function loadProject(id: string): Promise<Project | undefined> {
-  const db: DB  = await getDB()
-  const record  = await db.get(STORE_NAME, id)
+  const db: DB = await getDB()
+  const record = await db.get(STORE_NAME, id)
   if (!record) return undefined
   return deserializeProject(record.data)
 }
 
 /** 저장된 프로젝트 요약 목록 (id · title · updatedAt). */
 export interface ProjectSummary {
-  id:        string
-  title:     string
+  id: string
+  title: string
   updatedAt: string
 }
 
 export async function listProjects(): Promise<ProjectSummary[]> {
   const db: DB = await getDB()
-  const all    = await db.getAll(STORE_NAME)
+  const all = await db.getAll(STORE_NAME)
   return all.map(({ id, title, updatedAt }) => ({ id, title, updatedAt }))
 }
 

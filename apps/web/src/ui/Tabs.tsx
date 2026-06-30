@@ -12,7 +12,17 @@ interface Props {
 
 export function Tabs({ items, active, onChange }: Props) {
   return (
-    <div role="tablist" style={{ display: 'inline-flex', gap: 4, background: 'var(--bg-inset)', border: '1px solid var(--border)', borderRadius: 'var(--r-pill)', padding: 4 }}>
+    <div
+      role="tablist"
+      style={{
+        display: 'inline-flex',
+        gap: 4,
+        background: 'var(--bg-inset)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--r-pill)',
+        padding: 4,
+      }}
+    >
       {items.map((it) => {
         const selected = it.id === active
         return (

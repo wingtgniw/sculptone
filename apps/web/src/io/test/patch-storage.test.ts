@@ -5,15 +5,22 @@ import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, it, expect } from 'vitest'
 import { ZodError } from 'zod'
 import {
-  savePatch, listPatches, loadPatch, deletePatch,
-  type SavedPatch, type PatchSummary,
+  savePatch,
+  listPatches,
+  loadPatch,
+  deletePatch,
+  type SavedPatch,
+  type PatchSummary,
 } from '../patch-storage'
 import { getDB } from '../_db'
 // __resetDB는 storage.ts에서 re-export하므로 기존 storage.test.ts와 동일 경로
 import { saveProject, loadProject, __resetDB } from '../storage'
 import {
-  createEmptyProject, createTrack, createNote,
-  addTrack, addNote,
+  createEmptyProject,
+  createTrack,
+  createNote,
+  addTrack,
+  addNote,
 } from '@sculptone/score-model'
 import type { Sound } from '@sculptone/score-model'
 
@@ -63,13 +70,13 @@ describe('patch-storage', () => {
   })
 
   it('filter + effects 포함 FULL_PATCH도 무손실 복원된다', async () => {
-    const saved  = await savePatch('Full Patch', FULL_PATCH)
+    const saved = await savePatch('Full Patch', FULL_PATCH)
     const loaded = await loadPatch(saved.id)
     expect(loaded).toEqual(FULL_PATCH)
   })
 
   it('preset sound도 저장·복원된다', async () => {
-    const saved  = await savePatch('Piano Preset', PRESET_SOUND)
+    const saved = await savePatch('Piano Preset', PRESET_SOUND)
     const loaded = await loadPatch(saved.id)
     expect(loaded).toEqual(PRESET_SOUND)
   })
@@ -114,9 +121,9 @@ describe('patch-storage', () => {
   it('손상 레코드(스키마 위반) → ZodError를 throw한다', async () => {
     const db = await getDB()
     await db.put('patches', {
-      id:        'corrupt-1',
-      name:      'C',
-      soundJson: '{"kind":"patch"}',   // engine / envelope 누락 → SoundSchema 실패
+      id: 'corrupt-1',
+      name: 'C',
+      soundJson: '{"kind":"patch"}', // engine / envelope 누락 → SoundSchema 실패
       createdAt: new Date().toISOString(),
     })
     await expect(loadPatch('corrupt-1')).rejects.toThrow(ZodError)
@@ -125,8 +132,8 @@ describe('patch-storage', () => {
   it('손상 레코드(비-JSON) → Error를 throw한다', async () => {
     const db = await getDB()
     await db.put('patches', {
-      id:        'corrupt-2',
-      name:      'C',
+      id: 'corrupt-2',
+      name: 'C',
       soundJson: 'not-json',
       createdAt: new Date().toISOString(),
     })
@@ -139,14 +146,14 @@ describe('patch-storage', () => {
     const db = await getDB()
     // 의도적으로 역순(나중 것 먼저) put
     await db.put('patches', {
-      id:        'p-late',
-      name:      'Newer',
+      id: 'p-late',
+      name: 'Newer',
       soundJson: JSON.stringify(BASE_PATCH),
       createdAt: '2026-01-02T00:00:00.000Z',
     })
     await db.put('patches', {
-      id:        'p-early',
-      name:      'Older',
+      id: 'p-early',
+      name: 'Older',
       soundJson: JSON.stringify(BASE_PATCH),
       createdAt: '2026-01-01T00:00:00.000Z',
     })

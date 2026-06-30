@@ -6,7 +6,9 @@ import { MixerPanel } from '../MixerPanel'
 import { createTrack, addTrack } from '@sculptone/score-model'
 
 describe('MixerPanel', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('각 트랙의 이름과 볼륨 슬라이더가 렌더된다', () => {
     render(<MixerPanel />)

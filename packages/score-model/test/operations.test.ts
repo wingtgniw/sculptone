@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { createEmptyProject, createTrack, createNote } from '../src/factory'
-import { addTrack, addNote, updateNote, removeNote, updateTrackMixer, updateTrackSound } from '../src/operations'
+import {
+  addTrack,
+  addNote,
+  updateNote,
+  removeNote,
+  updateTrackMixer,
+  updateTrackSound,
+} from '../src/operations'
 import type { Sound } from '../src/schema'
 
 describe('operations (immutable)', () => {
@@ -57,7 +64,10 @@ describe('updateTrackSound', () => {
     p = updateTrackSound(p, t1.id, newSound)
     expect(p.tracks.find((t) => t.id === t1.id)!.sound).toEqual(newSound)
     // 다른 트랙은 기본값 유지
-    expect(p.tracks.find((t) => t.id === t2.id)!.sound).toEqual({ kind: 'preset', presetId: 'acoustic-piano' })
+    expect(p.tracks.find((t) => t.id === t2.id)!.sound).toEqual({
+      kind: 'preset',
+      presetId: 'acoustic-piano',
+    })
     // 기타 필드 보존
     expect(p.tracks.find((t) => t.id === t1.id)!.notes).toHaveLength(0)
     expect(p.tracks.find((t) => t.id === t1.id)!.mixer.volume).toBe(0.8)

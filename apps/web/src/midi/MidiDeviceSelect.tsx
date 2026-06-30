@@ -43,16 +43,22 @@ export function MidiDeviceSelect({
       value={selectedDeviceId ?? ''}
       onChange={handleChange}
       style={{
-        font: 'inherit', fontSize: 11,
-        padding: '3px 6px', borderRadius: 'var(--r-sm)',
-        border: '1px solid var(--border)', cursor: 'pointer',
-        background: 'var(--bg-elevated)', color: 'var(--text-mid)',
+        font: 'inherit',
+        fontSize: 11,
+        padding: '3px 6px',
+        borderRadius: 'var(--r-sm)',
+        border: '1px solid var(--border)',
+        cursor: 'pointer',
+        background: 'var(--bg-elevated)',
+        color: 'var(--text-mid)',
         whiteSpace: 'nowrap',
       }}
     >
       <option value="">— MIDI 입력 선택 —</option>
       {devices.map((d) => (
-        <option key={d.id} value={d.id}>{d.name}</option>
+        <option key={d.id} value={d.id}>
+          {d.name}
+        </option>
       ))}
     </select>
   )

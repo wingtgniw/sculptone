@@ -5,7 +5,9 @@ import { useStore } from '../../state/store'
 import { TransportBar } from '../TransportBar'
 
 describe('TransportBar', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
   it('재생 버튼 클릭 시 onPlay 호출 + isPlaying true', async () => {
     const onPlay = vi.fn()
     render(<TransportBar onPlay={onPlay} onStop={() => {}} />)

@@ -1,10 +1,13 @@
 import { create } from 'zustand'
+import { createEmptyProject, createTrack, addTrack, type Project } from '@sculptone/score-model'
 import {
-  createEmptyProject, createTrack, addTrack, type Project,
-} from '@sculptone/score-model'
-import {
-  createHistory, record, undo as historyUndo, redo as historyRedo,
-  canUndo, canRedo, type History,
+  createHistory,
+  record,
+  undo as historyUndo,
+  redo as historyRedo,
+  canUndo,
+  canRedo,
+  type History,
 } from './history'
 
 export type Mode = 'compose' | 'play' | 'transcribe'

@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useStore } from '../state/store'
-import { addNote, addTrack, createNote, createTrack, createEmptyProject } from '@sculptone/score-model'
+import {
+  addNote,
+  addTrack,
+  createNote,
+  createTrack,
+  createEmptyProject,
+} from '@sculptone/score-model'
 
 // ── 픽스처 ────────────────────────────────────────────────────
 
@@ -13,7 +19,9 @@ function withNote() {
 // ── 초기 히스토리 상태 ────────────────────────────────────────
 
 describe('초기 히스토리', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('history.past=[], history.future=[], _lastEditAt=0이다', () => {
     const s = useStore.getState()
@@ -31,7 +39,9 @@ describe('초기 히스토리', () => {
 // ── setProject → 히스토리 record ─────────────────────────────
 
 describe('setProject 히스토리 record', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('setProject 호출 시 history.past.length가 1 증가하고 present=새 project이다', () => {
     const p1 = withNote()
@@ -47,7 +57,7 @@ describe('setProject 히스토리 record', () => {
     useStore.setState(useStore.getInitialState(), true)
 
     const p1 = withNote()
-    useStore.getState().setProject(p1)  // _lastEditAt = T (fake now)
+    useStore.getState().setProject(p1) // _lastEditAt = T (fake now)
     // 시간 이동 없음 → Date.now() 동일 → 0ms 차이 < 400ms → 코얼레싱
     const p2 = { ...p1 }
     useStore.getState().setProject(p2)
@@ -67,7 +77,7 @@ describe('setProject 히스토리 record', () => {
     const p1 = withNote()
     useStore.getState().setProject(p1)
 
-    vi.advanceTimersByTime(401)  // 400ms 초과
+    vi.advanceTimersByTime(401) // 400ms 초과
 
     const p2 = { ...p1 }
     useStore.getState().setProject(p2)
@@ -82,7 +92,7 @@ describe('setProject 히스토리 record', () => {
   it('_lastEditAt=0 초기 상태에서 첫 setProject는 코얼레싱하지 않는다', () => {
     // fake timers로 Date.now()=0이 되도록 강제
     vi.useFakeTimers({ now: 0 })
-    useStore.setState(useStore.getInitialState(), true)  // _lastEditAt=0 리셋
+    useStore.setState(useStore.getInitialState(), true) // _lastEditAt=0 리셋
     expect(useStore.getState()._lastEditAt).toBe(0)
 
     const p1 = withNote()
@@ -90,7 +100,7 @@ describe('setProject 히스토리 record', () => {
 
     // 0 - 0 = 0 < 400 となるが _lastEditAt=0 Guard により코얼레싱하지 않아야 함
     const s = useStore.getState()
-    expect(s.history.past).toHaveLength(1)  // 코얼레싱 아님
+    expect(s.history.past).toHaveLength(1) // 코얼레싱 아님
 
     vi.useRealTimers()
   })
@@ -99,7 +109,9 @@ describe('setProject 히스토리 record', () => {
 // ── replaceProject → 히스토리 리셋 ───────────────────────────
 
 describe('replaceProject 히스토리 리셋', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('replaceProject는 history를 createHistory(project)로 리셋하고 _lastEditAt=0으로 초기화한다', () => {
     // 히스토리 쌓기
@@ -123,7 +135,9 @@ describe('replaceProject 히스토리 리셋', () => {
 // ── undo ─────────────────────────────────────────────────────
 
 describe('undo 액션', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('undo()는 이전 project를 복원한다', () => {
     const originalProject = useStore.getState().project
@@ -139,11 +153,11 @@ describe('undo 액션', () => {
 
   it('undo() 시 selectedTrackId가 복원된 project에 없으면 첫 트랙으로 보정된다', () => {
     const s = useStore.getState()
-    const firstTrackId = s.selectedTrackId   // Piano 트랙 id
+    const firstTrackId = s.selectedTrackId // Piano 트랙 id
 
     // t2를 추가하고 선택 → 이것이 undo 대상 편집
     const t2 = createTrack('Bass')
-    s.setProject(addTrack(s.project, t2))    // past=[project0], present=p1(t2 포함)
+    s.setProject(addTrack(s.project, t2)) // past=[project0], present=p1(t2 포함)
     s.selectTrack(t2.id)
     expect(useStore.getState().selectedTrackId).toBe(t2.id)
 
@@ -173,13 +187,13 @@ describe('undo 액션', () => {
     vi.advanceTimersByTime(401)
 
     // 노트 제거
-    const p2 = { ...p1, tracks: p1.tracks.map((t) => t.id === tid ? { ...t, notes: [] } : t) }
+    const p2 = { ...p1, tracks: p1.tracks.map((t) => (t.id === tid ? { ...t, notes: [] } : t)) }
     useStore.getState().setProject(p2)
 
     // undo → p1(note 있음) → selectedNoteId 유지
     useStore.getState().undo()
     expect(useStore.getState().project).toBe(p1)
-    expect(useStore.getState().selectedNoteId).toBe(note.id)  // 보정 불필요, 노트 존재
+    expect(useStore.getState().selectedNoteId).toBe(note.id) // 보정 불필요, 노트 존재
 
     // 다시 undo → original(note 없음) → selectedNoteId=null 보정
     useStore.getState().undo()
@@ -200,7 +214,9 @@ describe('undo 액션', () => {
 // ── undo/redo 직후 setProject 코얼레싱 방지 ──────────────────
 
 describe('undo/redo 직후 setProject 코얼레싱 방지', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('undo() 직후(시간 경과 없이) setProject는 코얼레싱하지 않아 별도 undo 단계가 된다', () => {
     vi.useFakeTimers()
@@ -222,7 +238,7 @@ describe('undo/redo 직후 setProject 코얼레싱 방지', () => {
     const s = useStore.getState()
     // _lastEditAt=0 덕분에 코얼레싱하지 않아 past.length=1, canUndo=true
     expect(s.history.past).toHaveLength(1)
-    expect(s.history.past.length > 0).toBe(true)  // canUndo
+    expect(s.history.past.length > 0).toBe(true) // canUndo
 
     vi.useRealTimers()
   })
@@ -251,7 +267,9 @@ describe('undo/redo 직후 setProject 코얼레싱 방지', () => {
 // ── redo ─────────────────────────────────────────────────────
 
 describe('redo 액션', () => {
-  beforeEach(() => { useStore.setState(useStore.getInitialState(), true) })
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
 
   it('redo()는 undo 이전 project를 재적용한다', () => {
     const p1 = withNote()
