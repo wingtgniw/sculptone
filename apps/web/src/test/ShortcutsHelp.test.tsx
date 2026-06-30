@@ -72,4 +72,16 @@ describe('ShortcutsHelp', () => {
     fireEvent.click(screen.getByText('키보드 단축키'))
     expect(useStore.getState().showShortcuts).toBe(true)
   })
+
+  it('클립보드 단축키 "노트 복사" 항목이 표시된다', () => {
+    useStore.setState({ showShortcuts: true })
+    render(<ShortcutsHelp />)
+    expect(screen.getByText('노트 복사')).toBeInTheDocument()
+  })
+
+  it('클립보드 단축키 "노트 복제 (+1마디)" 항목이 표시된다', () => {
+    useStore.setState({ showShortcuts: true })
+    render(<ShortcutsHelp />)
+    expect(screen.getByText('노트 복제 (+1마디)')).toBeInTheDocument()
+  })
 })

@@ -10,6 +10,10 @@ const SHORTCUTS: { keys: string; desc: string }[] = [
   { keys: 'Ctrl+Z / Cmd+Z', desc: '실행 취소' },
   { keys: 'Ctrl+Shift+Z / Cmd+Shift+Z', desc: '다시 실행' },
   { keys: 'Del / Backspace', desc: '노트 삭제 (Piano Roll)' },
+  { keys: 'Ctrl+C / Cmd+C', desc: '노트 복사' },
+  { keys: 'Ctrl+X / Cmd+X', desc: '노트 오려내기' },
+  { keys: 'Ctrl+V / Cmd+V', desc: '노트 붙여넣기 (재생 위치에)' },
+  { keys: 'Ctrl+D / Cmd+D', desc: '노트 복제 (+1마디)' },
   { keys: '?', desc: '이 도움말 열기 / 닫기' },
 ]
 

@@ -1,5 +1,11 @@
 import { create } from 'zustand'
-import { createEmptyProject, createTrack, addTrack, type Project } from '@sculptone/score-model'
+import {
+  createEmptyProject,
+  createTrack,
+  addTrack,
+  type Project,
+  type Note,
+} from '@sculptone/score-model'
 import { normalizeLoop } from '../compose/loop'
 import {
   createHistory,
@@ -103,6 +109,12 @@ export interface AppState {
    * _lastEditAt을 0으로 리셋해 다음 setProject 호출이 새 undo 스텝이 되게 한다.
    */
   endEdit: () => void
+  /**
+   * 클립보드에 복사된 노트. null = 클립보드 비어있음.
+   * undo 스택에 기록하지 않는다 — setClipboardNote는 history를 건드리지 않음.
+   */
+  clipboardNote: Note | null
+  setClipboardNote: (note: Note | null) => void
 }
 
 function initialProject(): Project {
@@ -219,4 +231,6 @@ export const useStore = create<AppState>((set) => ({
   setShowShortcuts: (show) => set({ showShortcuts: show }),
   toggleShortcuts: () => set((s) => ({ showShortcuts: !s.showShortcuts })),
   endEdit: () => set({ _lastEditAt: 0 }),
+  clipboardNote: null,
+  setClipboardNote: (note) => set({ clipboardNote: note }),
 }))

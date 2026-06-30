@@ -18,6 +18,7 @@ import { NotationView } from '../notation/NotationView'
 import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 import { ShortcutsHelp } from './ShortcutsHelp'
 import { matchShortcut } from './shortcuts'
+import { useClipboard } from '../compose/useClipboard'
 
 const TABS = [
   { id: 'compose', label: 'Compose' },
@@ -68,6 +69,7 @@ export function AppShell() {
   const tempo = useStore((s) => s.project.transport.tempo)
   const timeSignature = useStore((s) => s.project.transport.timeSignature)
   const { play, stop, getSeconds } = useAudio()
+  useClipboard({ getSeconds })
 
   const undo = useStore((s) => s.undo)
   const redo = useStore((s) => s.redo)
