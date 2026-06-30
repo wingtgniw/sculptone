@@ -57,6 +57,11 @@ export interface AppState {
   setRecordStopSec: (sec: number) => void
   setComposeView: (view: ComposeView) => void
   setSoundPanelTrackId: (id: string | null) => void
+  /**
+   * 현재 편집 제스처 경계를 닫는다.
+   * _lastEditAt을 0으로 리셋해 다음 setProject 호출이 새 undo 스텝이 되게 한다.
+   */
+  endEdit: () => void
 }
 
 function initialProject(): Project {
@@ -154,4 +159,5 @@ export const useStore = create<AppState>((set) => ({
   setRecordStopSec: (sec) => set({ recordStopSec: sec }),
   setComposeView: (view) => set({ composeView: view }),
   setSoundPanelTrackId: (id) => set({ soundPanelTrackId: id }),
+  endEdit: () => set({ _lastEditAt: 0 }),
 }))
