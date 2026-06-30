@@ -9,10 +9,11 @@ on:
 permissions:
   contents: read
 
-# 같은 ref에 새 푸시가 오면 진행 중이던 실행을 취소(중복 빌드 방지)
+# 같은 ref에 새 푸시가 오면 진행 중이던 실행을 취소(중복 빌드 방지).
+# 단, main은 모든 커밋이 CI 결과를 갖도록 취소하지 않고 PR에서만 취소.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -50,7 +51,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: '**/coverage/'
+          # node_modules/심링크 순회를 피하려 커버리지 디렉터리를 명시 한정
+          path: |
+            packages/*/coverage/
+            apps/web/coverage/
           if-no-files-found: ignore
           retention-days: 14
 
