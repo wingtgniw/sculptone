@@ -58,3 +58,37 @@ export function computeResize(
   const duration = Math.max(minDuration, snap(note.duration + deltaTicks, gridTicks))
   return { duration }
 }
+
+/**
+ * 그룹 이동 드래그: 선택 노트 전체에 적용할 { tickDelta, pitchDelta }를 계산한다.
+ *
+ * **스냅**: rawTickDelta를 grid 단위로 스냅(delta 자체를 스냅 → 그룹이 grid 배수로 이동).
+ *           gridTicks <= 0 이면 스냅 없음.
+ * **그룹 클램프**:
+ *   - tick: 모든 노트의 start >= 0 보장 → tickDelta >= -min(originNotes[*].start)
+ *   - pitch: 가시 범위 PITCH_LOW..PITCH_HIGH 유지 → pitchDelta ∈ [PITCH_LOW-minPitch, PITCH_HIGH-maxPitch]
+ * **빈 배열**: { tickDelta:0, pitchDelta:0 } 반환.
+ *
+ * 호출측(PianoRoll)에서 이 함수의 반환값으로 각 노트의 새 위치를
+ * origNotes[id].start + tickDelta, origNotes[id].pitch + pitchDelta 로 절대 계산한다.
+ */
+export function computeGroupMove(
+  originNotes: ReadonlyArray<{ start: number; pitch: number }>,
+  rawTickDelta: number,
+  rawPitchDelta: number,
+  gridTicks: number,
+): { tickDelta: number; pitchDelta: number } {
+  if (originNotes.length === 0) return { tickDelta: 0, pitchDelta: 0 }
+
+  // tick: delta를 grid로 스냅, 그룹 클램프
+  const snappedTick = snap(rawTickDelta, gridTicks)
+  const minStart = Math.min(...originNotes.map((n) => n.start))
+  const tickDelta = Math.max(snappedTick, 0 - minStart) // 0-minStart: -0 방지
+
+  // pitch: 스냅 없음(반음 단위 정수), 그룹 클램프 (가시 범위 PITCH_LOW..PITCH_HIGH)
+  const minPitch = Math.min(...originNotes.map((n) => n.pitch))
+  const maxPitch = Math.max(...originNotes.map((n) => n.pitch))
+  const pitchDelta = Math.min(PITCH_HIGH - maxPitch, Math.max(PITCH_LOW - minPitch, rawPitchDelta)) // PITCH_LOW-minPitch: -0 방지
+
+  return { tickDelta, pitchDelta }
+}

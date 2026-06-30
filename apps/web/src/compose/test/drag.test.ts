@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pxToTicks, pxToSemitones, computeMove, computeResize } from '../drag'
+import { pxToTicks, pxToSemitones, computeMove, computeResize, computeGroupMove } from '../drag'
 import { PITCH_LOW, PITCH_HIGH, LANE_HEIGHT, PX_PER_BEAT } from '../geometry'
 
 const PPQ = 480
@@ -149,5 +149,133 @@ describe('computeResize', () => {
     // max(120, 360) = 360
     const r = computeResize({ duration: 480 }, -180, GRID)
     expect(r.duration).toBe(360)
+  })
+})
+
+// ── computeGroupMove ──────────────────────────────────────────
+
+describe('computeGroupMove', () => {
+  const GRID = 120 // divisionToTicks(16, 480)
+
+  // ── 빈 배열 ────────────────────────────────────────────────
+
+  it('빈 originNotes → { tickDelta:0, pitchDelta:0 }', () => {
+    const r = computeGroupMove([], 500, 3, GRID)
+    expect(r.tickDelta).toBe(0)
+    expect(r.pitchDelta).toBe(0)
+  })
+
+  // ── 틱 스냅 ────────────────────────────────────────────────
+
+  it('rawTickDelta=130, grid=120 → snap(130,120)=120 → tickDelta=120', () => {
+    const notes = [{ start: 240, pitch: 60 }]
+    // snap(130, 120) = round(130/120)*120 = round(1.083)*120 = 1*120 = 120
+    const r = computeGroupMove(notes, 130, 0, GRID)
+    expect(r.tickDelta).toBe(120)
+  })
+
+  it('rawTickDelta=180(1.5 grid) → snap(180,120)=240 (round-half-up)', () => {
+    // snap(180, 120) = round(1.5)*120 = 2*120 = 240
+    const notes = [{ start: 0, pitch: 60 }]
+    const r = computeGroupMove(notes, 180, 0, GRID)
+    expect(r.tickDelta).toBe(240)
+  })
+
+  it('gridTicks=0: 스냅 없이 rawTickDelta 그대로', () => {
+    const notes = [{ start: 240, pitch: 60 }]
+    const r = computeGroupMove(notes, 77, 0, 0)
+    expect(r.tickDelta).toBe(77)
+  })
+
+  // ── tick 그룹 클램프 ────────────────────────────────────────
+
+  it('start=0 노트 포함: 음수 tickDelta 불가(클램프)', () => {
+    const notes = [
+      { start: 0, pitch: 60 },
+      { start: 480, pitch: 62 },
+    ]
+    // rawTickDelta=-120, snap(-120,120)=-120 → max(-120, -0) = 0
+    const r = computeGroupMove(notes, -120, 0, GRID)
+    expect(r.tickDelta).toBe(0)
+  })
+
+  it('start=240 최소: tickDelta >= -240 (왼쪽으로 최대 240틱)', () => {
+    const notes = [
+      { start: 240, pitch: 60 },
+      { start: 960, pitch: 62 },
+    ]
+    // rawTickDelta=-9999, snap=-9999/0=-…, max(snap, -240)=-240 (grid=0로 테스트)
+    const r = computeGroupMove(notes, -9999, 0, 0)
+    expect(r.tickDelta).toBe(-240)
+  })
+
+  // ── pitch 그룹 클램프 ───────────────────────────────────────
+
+  it('pitch=PITCH_LOW 노트 포함: 음수 pitchDelta 불가(클램프)', () => {
+    // 하단 노트가 이미 PITCH_LOW → 더 내려갈 수 없다 (PITCH_LOW - PITCH_LOW = 0)
+    const notes = [
+      { start: 0, pitch: PITCH_LOW },
+      { start: 0, pitch: 60 },
+    ]
+    const r = computeGroupMove(notes, 0, -5, GRID)
+    expect(r.pitchDelta).toBe(0)
+  })
+
+  it('pitch=PITCH_HIGH 노트 포함: 양수 pitchDelta 불가(클램프)', () => {
+    // 상단 노트가 이미 PITCH_HIGH → 더 올라갈 수 없다 (PITCH_HIGH - PITCH_HIGH = 0)
+    const notes = [
+      { start: 0, pitch: 60 },
+      { start: 0, pitch: PITCH_HIGH },
+    ]
+    const r = computeGroupMove(notes, 0, 3, GRID)
+    expect(r.pitchDelta).toBe(0)
+  })
+
+  it('pitchDelta 클램프: minPitch=60, maxPitch=72 → delta range [PITCH_LOW-60, PITCH_HIGH-72]=[-24..12]', () => {
+    // [PITCH_LOW-60, PITCH_HIGH-72] = [36-60, 84-72] = [-24, 12]
+    const notes = [
+      { start: 0, pitch: 60 },
+      { start: 0, pitch: 72 },
+    ]
+    const rUp = computeGroupMove(notes, 0, 20, GRID)
+    expect(rUp.pitchDelta).toBe(12) // 클램프: PITCH_HIGH - 72 = 12
+    const rDown = computeGroupMove(notes, 0, -30, GRID)
+    expect(rDown.pitchDelta).toBe(-24) // 클램프: PITCH_LOW - 60 = -24
+    const rOk = computeGroupMove(notes, 0, 5, GRID)
+    expect(rOk.pitchDelta).toBe(5) // 클램프 없음
+  })
+
+  it('group-move: 상단 노트가 PITCH_HIGH 초과하지 않음 (가시 범위 클램프)', () => {
+    // notes at 70 and 80; rawDelta=+20 → new: min(PITCH_HIGH-80, 20) = min(4, 20) = 4
+    const notes = [
+      { start: 0, pitch: 70 },
+      { start: 0, pitch: 80 },
+    ]
+    const r = computeGroupMove(notes, 0, 20, GRID)
+    expect(r.pitchDelta).toBe(PITCH_HIGH - 80) // 4
+  })
+
+  it('group-move: 하단 노트가 PITCH_LOW 미만으로 못 감 (가시 범위 클램프)', () => {
+    // notes at 40 and 60; rawDelta=-10 → new: max(PITCH_LOW-40, -10) = max(-4, -10) = -4
+    const notes = [
+      { start: 0, pitch: 40 },
+      { start: 0, pitch: 60 },
+    ]
+    const r = computeGroupMove(notes, 0, -10, GRID)
+    expect(r.pitchDelta).toBe(PITCH_LOW - 40) // -4
+  })
+
+  // ── 통합: tick + pitch 동시 ─────────────────────────────────
+
+  it('tick과 pitch 동시 이동 및 클램프', () => {
+    const notes = [
+      { start: 120, pitch: 60 },
+      { start: 240, pitch: 70 },
+    ]
+    // rawTickDelta=130 → snap=120, clamp max(-120, -120)=-120 실제 minStart=120이므로 OK
+    // rawPitchDelta=-100 → clamp(-100, PITCH_LOW-60=-24, PITCH_HIGH-70=14) → -24
+    const r = computeGroupMove(notes, 130, -100, GRID)
+    expect(r.tickDelta).toBe(120)
+    expect(r.pitchDelta).toBe(-24)
   })
 })
