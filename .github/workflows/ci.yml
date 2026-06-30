@@ -27,7 +27,7 @@ jobs:
       # pnpm을 setup-node보다 먼저 설치해야 pnpm 스토어 캐시가 동작한다.
       # 버전은 root package.json의 packageManager 필드에서 읽는다.
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
         uses: actions/setup-node@v4
