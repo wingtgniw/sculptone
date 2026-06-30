@@ -30,6 +30,7 @@ export function VelocityLane() {
   const selectedNoteIds = useStore((s) => s.selectedNoteIds)
   const setProject = useStore((s) => s.setProject)
   const endEdit = useStore((s) => s.endEdit)
+  const setDragging = useStore((s) => s.setDragging)
 
   const laneRef = useRef<HTMLDivElement>(null)
   const dragVelRef = useRef<DragVelState | null>(null)
@@ -69,6 +70,8 @@ export function VelocityLane() {
         startY: e.clientY,
       }
     }
+
+    setDragging(true) // Fix 3: velocity 드래그 개시 — Q/Ctrl+A 차단
 
     // Pointer capture: 막대 밖으로 포인터가 나가도 pointermove/up이 이 요소로 전달됨.
     // jsdom에서 미지원 → try/catch 무시. 레인 컨테이너의 onPointerMove로 대체.
@@ -118,6 +121,7 @@ export function VelocityLane() {
   const handleDragEnd = () => {
     endEdit()
     dragVelRef.current = null
+    setDragging(false) // Fix 3: 모든 종료 경로에서 isDragging 리셋 (stuck 방지)
   }
 
   return (

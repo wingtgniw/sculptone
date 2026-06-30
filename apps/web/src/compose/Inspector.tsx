@@ -1,5 +1,7 @@
 import { useStore } from '../state/store'
 import { updateNote } from '@sculptone/score-model'
+import { Button } from '../ui/Button'
+import { quantizeSelection } from './quantizeSelection'
 
 const PITCH_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 function noteName(pitch: number): string {
@@ -44,6 +46,13 @@ export function Inspector() {
         <div style={{ fontSize: 12, color: 'var(--text-mid)', lineHeight: 2.2 }}>
           {count}개 노트 선택됨
         </div>
+        <Button
+          variant="secondary"
+          style={{ fontSize: 11, padding: '4px 10px', width: '100%', marginTop: 10 }}
+          onClick={quantizeSelection}
+        >
+          Quantize
+        </Button>
       </div>
     )
   }
@@ -93,6 +102,13 @@ export function Inspector() {
           {noteName(note.pitch)}
         </span>
       </div>
+      <Button
+        variant="secondary"
+        style={{ fontSize: 11, padding: '4px 10px', width: '100%', marginTop: 10 }}
+        onClick={quantizeSelection}
+      >
+        Quantize
+      </Button>
     </div>
   )
 }

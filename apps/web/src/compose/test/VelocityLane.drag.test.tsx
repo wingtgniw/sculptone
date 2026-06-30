@@ -208,6 +208,40 @@ describe('VelocityLane drag smoke', () => {
     expect(useStore.getState().history.past.length).toBeGreaterThan(pastLenBefore)
   })
 
+  // ── Fix 3: isDragging 플래그 set/clear 검증 ────────────────────────────
+
+  it('velocity bar pointerdown 시 isDragging=true, pointerup 후 isDragging=false (reset 보장)', () => {
+    render(<VelocityLane />)
+    const bar = screen.getByTestId('velocity-bar')
+    const lane = screen.getByTestId('velocity-lane')
+
+    act(() => {
+      firePointerEvent(bar, 'pointerdown', 50, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(true)
+
+    act(() => {
+      firePointerEvent(lane, 'pointerup', 50, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(false)
+  })
+
+  it('VelocityLane pointercancel 시 isDragging=false로 리셋된다 (stuck 방지)', () => {
+    render(<VelocityLane />)
+    const bar = screen.getByTestId('velocity-bar')
+    const lane = screen.getByTestId('velocity-lane')
+
+    act(() => {
+      firePointerEvent(bar, 'pointerdown', 50, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(true)
+
+    act(() => {
+      firePointerEvent(lane, 'pointercancel', 50, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(false)
+  })
+
   // ── endEdit 호출: undo 스텝 생성 ─────────────────────────
 
   it('pointerup 후 undo를 호출하면 velocity가 원래 값으로 복구된다', () => {

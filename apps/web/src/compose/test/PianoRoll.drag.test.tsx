@@ -235,6 +235,40 @@ describe('PianoRoll drag smoke', () => {
     expect(track.notes[0]!.start).toBe(240)
   })
 
+  // ── Fix 3: isDragging 플래그 set/clear 검증 ────────────────────────────
+
+  it('노트 pointerdown 시 isDragging=true, pointerup 후 isDragging=false (reset 보장)', () => {
+    render(<PianoRoll />)
+    const noteEl = screen.getByTestId('note')
+    const container = screen.getByTestId('pianoroll')
+
+    act(() => {
+      firePointerEvent(noteEl, 'pointerdown', 100, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(true)
+
+    act(() => {
+      firePointerEvent(container, 'pointerup', 100, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(false)
+  })
+
+  it('pointercancel 시 isDragging=false로 리셋된다 (stuck 방지)', () => {
+    render(<PianoRoll />)
+    const noteEl = screen.getByTestId('note')
+    const container = screen.getByTestId('pianoroll')
+
+    act(() => {
+      firePointerEvent(noteEl, 'pointerdown', 100, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(true)
+
+    act(() => {
+      firePointerEvent(container, 'pointercancel', 100, 200)
+    })
+    expect(useStore.getState().isDragging).toBe(false)
+  })
+
   // ── Fix #6 스모크: 수직 드래그로 pitch가 변한다 ─────────────────────
 
   it('수직 드래그(dy=2레인, clientX 고정)로 노트 pitch가 감소한다 (Fix #6)', () => {

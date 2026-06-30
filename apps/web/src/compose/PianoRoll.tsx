@@ -56,6 +56,7 @@ export function PianoRoll() {
   const setSelectedNoteIds = useStore((s) => s.setSelectedNoteIds)
   const clearNoteSelection = useStore((s) => s.clearNoteSelection)
   const endEdit = useStore((s) => s.endEdit)
+  const setDragging = useStore((s) => s.setDragging)
   const rollRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const boxSelRef = useRef<{ startX: number; startY: number } | null>(null)
@@ -86,6 +87,7 @@ export function PianoRoll() {
       const relX = e.clientX - rect.left
       const relY = e.clientY - rect.top
       boxSelRef.current = { startX: relX, startY: relY }
+      setDragging(true) // Fix 3: 박스선택 드래그 개시 — Q/Ctrl+A 차단
       setBoxSelVisual({ x: relX, y: relY, w: 0, h: 0 })
       // Fix B: pointer capture로 그리드 밖 pointerup/lostpointercapture가 올바른 요소로 감
       try {
@@ -150,6 +152,7 @@ export function PianoRoll() {
         type: 'group-move',
         moved: false,
       }
+      setDragging(true) // Fix 3: 그룹 드래그 개시 — Q/Ctrl+A 차단
       try {
         e.currentTarget.setPointerCapture(e.pointerId)
       } catch {}
@@ -166,6 +169,7 @@ export function PianoRoll() {
       type: 'move',
       moved: false,
     }
+    setDragging(true) // Fix 3: 단일 노트 드래그 개시 — Q/Ctrl+A 차단
     // setPointerCapture: 포인터가 노트 밖으로 나가도 pointermove/up 이 노트 → 컨테이너로 버블링됨.
     // jsdom 미지원 시 try/catch로 무시; 컨테이너 onPointerMove 직접 발사로 대체 가능.
     try {
@@ -193,6 +197,7 @@ export function PianoRoll() {
       type: 'resize',
       moved: false,
     }
+    setDragging(true) // Fix 3: 리사이즈 드래그 개시 — Q/Ctrl+A 차단
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {}
@@ -265,6 +270,7 @@ export function PianoRoll() {
     dragRef.current = null
     boxSelRef.current = null
     setBoxSelVisual(null)
+    setDragging(false) // Fix 3: 모든 종료 경로에서 isDragging 리셋 (stuck 방지)
   }
 
   const handleContainerPointerUp = (e: RPointerEvent<HTMLDivElement>) => {
@@ -285,6 +291,7 @@ export function PianoRoll() {
       setSelectedNoteIds(ids)
       boxSelRef.current = null
       setBoxSelVisual(null)
+      setDragging(false) // Fix 3: 박스선택 종료 — isDragging 리셋
       return
     }
 
@@ -296,6 +303,7 @@ export function PianoRoll() {
       selectNote(dragRef.current.noteId)
     }
     dragRef.current = null
+    setDragging(false) // Fix 3: 드래그 종료 — isDragging 리셋
   }
 
   // Fix G: O(K) includes → O(1) Set.has로 교체 (노트 수만큼 반복 방지)
