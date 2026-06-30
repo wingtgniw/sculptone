@@ -5,8 +5,8 @@ import {
   type KeyboardEvent as RKeyboardEvent,
 } from 'react'
 import { useStore } from '../state/store'
-import { addNote, removeNote, createNote, updateNote } from '@sculptone/score-model'
-import type { Note } from '@sculptone/score-model'
+import { addNote, removeNote, createNote, updateNote, moveNotes } from '@sculptone/score-model'
+import type { Note, Project } from '@sculptone/score-model'
 import {
   tickToX,
   xToTick,
@@ -19,7 +19,7 @@ import {
   PX_PER_BEAT,
 } from './geometry'
 import { divisionToTicks, snap } from './quantize'
-import { pxToTicks, pxToSemitones, computeMove, computeResize } from './drag'
+import { pxToTicks, pxToSemitones, computeMove, computeResize, computeGroupMove } from './drag'
 import { notesInRect } from './selection'
 import type { SelectionRect } from './selection'
 
@@ -33,9 +33,14 @@ interface DragState {
   noteId: string
   /** 드래그 시작 시 note 값의 스냅샷 (절댓값 계산 기준). */
   origNote: { start: number; pitch: number; duration: number }
+  /**
+   * group-move 전용: grab 시점의 project 참조.
+   * 매 pointermove는 이 origProject + 총 델타로 절대 위치 계산 (누적 방지).
+   */
+  origProject?: Project
   startX: number
   startY: number
-  type: 'move' | 'resize'
+  type: 'move' | 'resize' | 'group-move'
   /** threshold 초과 여부. false이면 pointerup 시 클릭으로 처리. */
   moved: boolean
 }
@@ -106,6 +111,8 @@ export function PianoRoll() {
 
   const handleKeyDown = (e: RKeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
+      // 드래그 중 편집 차단: group-move / 단일 drag 도중 Delete는 무시한다.
+      if (dragRef.current) return
       if (selectedNoteIds.length === 0) return
       endEdit()
       let p = project
@@ -128,6 +135,24 @@ export function PianoRoll() {
     // Shift+클릭: 토글 선택 (드래그 없음) — selectNote 호출 이전에 분기
     if (e.shiftKey) {
       toggleNoteSelection(note.id)
+      return
+    }
+
+    // group-move: 잡은 노트가 다중 선택 집합에 포함 → 그룹 드래그 시작
+    if (selectedSet.has(note.id) && selectedNoteIds.length > 1) {
+      // selectNote 호출 안 함 — selectedNoteIds(다중 선택)를 유지한다.
+      dragRef.current = {
+        noteId: note.id,
+        origNote: { start: note.start, pitch: note.pitch, duration: note.duration },
+        origProject: project,
+        startX: e.clientX,
+        startY: e.clientY,
+        type: 'group-move',
+        moved: false,
+      }
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId)
+      } catch {}
       return
     }
 
@@ -206,10 +231,26 @@ export function PianoRoll() {
     // stale 클로저 방지: 항상 스토어에서 최신 project 를 읽는다.
     const currentProject = useStore.getState().project
 
-    if (type === 'move') {
+    if (type === 'group-move') {
+      // 그룹 이동: origProject 스냅샷 기준 절대 계산 (누적 방지)
+      const origProject = dragRef.current.origProject!
+      const origTrack = origProject.tracks.find((t) => t.id === selectedTrackId)
+      const originNotes =
+        origTrack?.notes
+          .filter((n) => selectedNoteIds.includes(n.id))
+          .map((n) => ({ start: n.start, pitch: n.pitch })) ?? []
+      const { tickDelta, pitchDelta } = computeGroupMove(
+        originNotes,
+        pxToTicks(dx, ppq),
+        pxToSemitones(dy, LANE_HEIGHT),
+        grid,
+      )
+      setProject(moveNotes(origProject, selectedTrackId, selectedNoteIds, tickDelta, pitchDelta))
+    } else if (type === 'move') {
       const patch = computeMove(origNote, pxToTicks(dx, ppq), pxToSemitones(dy, LANE_HEIGHT), grid)
       setProject(updateNote(currentProject, selectedTrackId, noteId, patch))
     } else {
+      // type === 'resize'
       const patch = computeResize(origNote, pxToTicks(dx, ppq), grid)
       setProject(updateNote(currentProject, selectedTrackId, noteId, patch))
     }
@@ -218,7 +259,9 @@ export function PianoRoll() {
   // ── 드래그 종료: 컨테이너 pointerup ──────────────────────────────
 
   // Fix #5: pointercancel / lostpointercapture 시 stale dragRef 정리.
+  // Fix 3: pointerup과 대칭으로 endEdit()을 호출해 coalesce 창을 닫는다.
   const handleDragRelease = () => {
+    endEdit()
     dragRef.current = null
     boxSelRef.current = null
     setBoxSelVisual(null)
