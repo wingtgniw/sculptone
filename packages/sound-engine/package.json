@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "test": "vitest run",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@sculptone/score-model": "workspace:*",
