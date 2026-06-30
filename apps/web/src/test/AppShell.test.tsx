@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, act, fireEvent } from '@testing-library/react'
+import { render, screen, act, fireEvent, createEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AppShell } from '../shell/AppShell'
 import { useStore } from '../state/store'
@@ -7,8 +7,10 @@ import { SoundDesignPanel } from '../sound/SoundDesignPanel'
 import App from '../App'
 import { addNote, createNote } from '@sculptone/score-model'
 
+const mockPlay = vi.fn()
+const mockStop = vi.fn()
 vi.mock('../audio/useAudio', () => ({
-  useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }),
+  useAudio: () => ({ play: mockPlay, stop: mockStop, getSeconds: () => 0 }),
 }))
 vi.mock('../io/useAutosave', () => ({ useAutosave: () => {} }))
 vi.mock('../midi/useMidi', () => ({
@@ -33,6 +35,8 @@ vi.mock('../sound/SoundDesignPanel', () => ({
 describe('AppShell', () => {
   beforeEach(() => {
     useStore.setState(useStore.getInitialState(), true)
+    mockPlay.mockClear()
+    mockStop.mockClear()
   })
 
   it('세 모드 탭을 렌더한다', () => {
@@ -227,5 +231,94 @@ describe('AppShell', () => {
     fireEvent.change(slider, { target: { value: '100' } })
     const updated = useStore.getState().project.tracks[0]!.notes[0]!
     expect(updated.velocity).toBe(100)
+  })
+
+  // ── Space / R / M / ? 단축키 ─────────────────────────────────
+
+  it('Space 키: isPlaying=false → play()가 호출된다', () => {
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: ' ' })
+    expect(mockPlay).toHaveBeenCalledTimes(1)
+    expect(mockStop).not.toHaveBeenCalled()
+  })
+
+  it('Space 키: isPlaying=true → stop()이 호출된다', () => {
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: ' ' })
+    expect(mockStop).toHaveBeenCalledTimes(1)
+    expect(mockPlay).not.toHaveBeenCalled()
+  })
+
+  it('R 키: isRecording 토글 — false → true', () => {
+    render(<AppShell />)
+    expect(useStore.getState().isRecording).toBe(false)
+    fireEvent.keyDown(document.body, { key: 'r' })
+    expect(useStore.getState().isRecording).toBe(true)
+  })
+
+  it('R 키: isRecording 토글 — true → false', () => {
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: 'r' })
+    expect(useStore.getState().isRecording).toBe(false)
+  })
+
+  it('M 키: metronomeEnabled 토글 — false → true', () => {
+    render(<AppShell />)
+    expect(useStore.getState().metronomeEnabled).toBe(false)
+    fireEvent.keyDown(document.body, { key: 'm' })
+    expect(useStore.getState().metronomeEnabled).toBe(true)
+  })
+
+  it('? 키: showShortcuts 토글 — false → true', () => {
+    render(<AppShell />)
+    expect(useStore.getState().showShortcuts).toBe(false)
+    fireEvent.keyDown(document.body, { key: '?', shiftKey: true })
+    expect(useStore.getState().showShortcuts).toBe(true)
+  })
+
+  it('INPUT 포커스 시 Space는 play를 호출하지 않는다 (입력 필드 가드)', () => {
+    render(<AppShell />)
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+    fireEvent.keyDown(input, { key: ' ', bubbles: true })
+    expect(mockPlay).not.toHaveBeenCalled()
+    document.body.removeChild(input)
+  })
+
+  it('Ctrl+Space는 play를 호출하지 않는다 (수식어 가드)', () => {
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: ' ', ctrlKey: true })
+    expect(mockPlay).not.toHaveBeenCalled()
+    expect(mockStop).not.toHaveBeenCalled()
+  })
+
+  // Fix #1: e.repeat 오토리피트 가드
+  it('e.repeat=true Space는 play를 호출하지 않는다 (오토리피트 가드)', () => {
+    render(<AppShell />)
+    fireEvent.keyDown(document.body, { key: ' ', repeat: true })
+    expect(mockPlay).not.toHaveBeenCalled()
+  })
+
+  // Fix #5: 툴바 단축키 도움말 버튼 onClick
+  it('단축키 도움말 버튼 클릭 시 showShortcuts가 true로 토글된다', async () => {
+    render(<AppShell />)
+    expect(useStore.getState().showShortcuts).toBe(false)
+    await userEvent.click(screen.getByRole('button', { name: '단축키 도움말' }))
+    expect(useStore.getState().showShortcuts).toBe(true)
+  })
+
+  // Fix #6: Space 키 preventDefault — 스크롤 방지 검증
+  it('Space 키 발화 시 defaultPrevented가 true이다 (스크롤 방지)', () => {
+    render(<AppShell />)
+    const event = createEvent.keyDown(document.body, { key: ' ' })
+    fireEvent(document.body, event)
+    expect(event.defaultPrevented).toBe(true)
   })
 })

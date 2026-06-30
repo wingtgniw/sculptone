@@ -74,6 +74,10 @@ export interface AppState {
   setRecordStopSec: (sec: number) => void
   setComposeView: (view: ComposeView) => void
   setSoundPanelTrackId: (id: string | null) => void
+  /** 단축키 도움말 오버레이 표시 여부. 기본 false. */
+  showShortcuts: boolean
+  setShowShortcuts: (show: boolean) => void
+  toggleShortcuts: () => void
   /**
    * 현재 편집 제스처 경계를 닫는다.
    * _lastEditAt을 0으로 리셋해 다음 setProject 호출이 새 undo 스텝이 되게 한다.
@@ -183,5 +187,8 @@ export const useStore = create<AppState>((set) => ({
   setRecordStopSec: (sec) => set({ recordStopSec: sec }),
   setComposeView: (view) => set({ composeView: view }),
   setSoundPanelTrackId: (id) => set({ soundPanelTrackId: id }),
+  showShortcuts: false,
+  setShowShortcuts: (show) => set({ showShortcuts: show }),
+  toggleShortcuts: () => set((s) => ({ showShortcuts: !s.showShortcuts })),
   endEdit: () => set({ _lastEditAt: 0 }),
 }))
