@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # pnpm을 setup-node보다 먼저 설치해야 pnpm 스토어 캐시가 동작한다.
       # 버전은 root package.json의 packageManager 필드에서 읽는다.
