@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { AppShell } from '../shell/AppShell'
 import { useStore } from '../state/store'
 import { SoundDesignPanel } from '../sound/SoundDesignPanel'
+import App from '../App'
+import { addNote, createNote } from '@sculptone/score-model'
 
 vi.mock('../audio/useAudio', () => ({
   useAudio: () => ({ play: () => {}, stop: () => {}, getSeconds: () => 0 }),
@@ -190,5 +192,40 @@ describe('AppShell', () => {
 
     await userEvent.click(screen.getByRole('button', { name: '다시 실행' }))
     expect(useStore.getState().project).toBe(modifiedProject)
+  })
+
+  // App 컴포넌트 스모크 (App.tsx 커버리지)
+  it('App 컴포넌트가 AppShell을 오류 없이 렌더한다', () => {
+    render(<App />)
+    expect(screen.getByRole('tab', { name: 'Compose' })).toBeInTheDocument()
+  })
+
+  // Inspector.tsx 미커버 함수: noteName + onChange
+  it('노트가 선택되면 Inspector가 음계명(noteName)을 표시한다 (C4 = midi 60)', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const note = createNote({ pitch: 60, start: 0, duration: 480, velocity: 80 })
+    act(() => {
+      s.setProject(addNote(s.project, tid, note))
+      s.selectNote(note.id)
+    })
+    render(<AppShell />)
+    // pitch 60 = C4
+    expect(screen.getByText('C4')).toBeInTheDocument()
+  })
+
+  it('Inspector velocity 슬라이더 변경 시 노트 velocity가 갱신된다', () => {
+    const s = useStore.getState()
+    const tid = s.selectedTrackId
+    const note = createNote({ pitch: 60, start: 0, duration: 480, velocity: 80 })
+    act(() => {
+      s.setProject(addNote(s.project, tid, note))
+      s.selectNote(note.id)
+    })
+    render(<AppShell />)
+    const slider = screen.getByRole('slider')
+    fireEvent.change(slider, { target: { value: '100' } })
+    const updated = useStore.getState().project.tracks[0]!.notes[0]!
+    expect(updated.velocity).toBe(100)
   })
 })

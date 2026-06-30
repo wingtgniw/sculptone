@@ -73,4 +73,21 @@ describe('editor store', () => {
     useStore.getState().setComposeView('roll')
     expect(useStore.getState().composeView).toBe('roll')
   })
+
+  it('초기 metronomeEnabled는 false이다', () => {
+    expect(useStore.getState().metronomeEnabled).toBe(false)
+  })
+
+  it('setMetronomeEnabled(true) → metronomeEnabled true', () => {
+    useStore.getState().setMetronomeEnabled(true)
+    expect(useStore.getState().metronomeEnabled).toBe(true)
+    useStore.getState().setMetronomeEnabled(false)
+    expect(useStore.getState().metronomeEnabled).toBe(false)
+  })
+
+  it('초기 countInBars는 0이다, setCountInBars(2) → 2', () => {
+    expect(useStore.getState().countInBars).toBe(0)
+    useStore.getState().setCountInBars(2)
+    expect(useStore.getState().countInBars).toBe(2)
+  })
 })

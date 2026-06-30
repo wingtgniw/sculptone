@@ -128,4 +128,12 @@ describe('FileMenu', () => {
     expect(filename).toMatch(/\.musicxml$/)
     expect(mime).toBe('application/vnd.recordare.musicxml+xml')
   })
+
+  it('Import MIDI 버튼 클릭 시 hidden file input의 click이 호출된다', async () => {
+    const { container } = render(<FileMenu />)
+    const fileInput = container.querySelector('input[type=file]') as HTMLInputElement
+    const clickSpy = vi.spyOn(fileInput, 'click').mockImplementation(() => {})
+    await userEvent.click(screen.getByRole('button', { name: /import midi/i }))
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
 })

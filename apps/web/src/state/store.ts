@@ -37,6 +37,20 @@ export interface AppState {
   composeView: ComposeView
   /** 사운드 디자인 패널 열림 상태. null = 닫힘. */
   soundPanelTrackId: string | null
+  /** 메트로놈 ON/OFF. 기본 false. */
+  metronomeEnabled: boolean
+  /** 녹음 시작 전 카운트인 마디 수. 0 = 카운트인 없음. 기본 0. */
+  countInBars: number
+  /**
+   * 내부 전용: 카운트인 오프셋(초).
+   * useAudio.play()가 재생 시작 직전 설정하며, useRecording 상승 에지에서 읽는다.
+   * 카운트인 없으면 0 (useRecording은 Tone.getTransport().seconds를 사용).
+   * 외부에서 직접 변경하지 말 것.
+   */
+  recordingContentStartSec: number
+  setMetronomeEnabled: (enabled: boolean) => void
+  setCountInBars: (bars: number) => void
+  setRecordingContentStartSec: (sec: number) => void
   setMode: (mode: Mode) => void
   /**
    * 인플레이스 편집용 — 선택 상태를 유지하고 히스토리에 record한다.
@@ -105,6 +119,13 @@ export const useStore = create<AppState>((set) => ({
   recordStopSec: 0,
   composeView: 'roll',
   soundPanelTrackId: null,
+  metronomeEnabled: false,
+  countInBars: 0,
+  recordingContentStartSec: 0,
+  setMetronomeEnabled: (enabled) =>
+    set(enabled ? { metronomeEnabled: true } : { metronomeEnabled: false, countInBars: 0 }),
+  setCountInBars: (bars) => set({ countInBars: bars }),
+  setRecordingContentStartSec: (sec) => set({ recordingContentStartSec: sec }),
 
   setMode: (mode) => set({ activeMode: mode }),
 

@@ -17,6 +17,12 @@ import type { MidiNoteMessage } from './parse'
  *   - active 하강 에지에서 take 커밋.
  * 이 분리로 빈 트랙 녹음, dangling 노트 마감, disarm 커밋, arm-after-play 정렬,
  * 트랙 전환/삭제 시 오배치, 재토글 유령 노트를 모두 해결한다.
+ *
+ * 카운트인 통합:
+ *   - useAudio.play()가 countInDurationSec을 store.recordingContentStartSec에 동기 설정.
+ *   - 상승 에지에서 recordingContentStartSec > 0이면 그 값을 recordStart 기준으로 사용.
+ *   - recordingContentStartSec = 0이면 기존 Tone.getTransport().seconds 경로 (arm-after-play 보존).
+ *   - 카운트인 중 입력(timeSec < 0)은 commitTake에서 필터링해 제외.
  */
 export function useRecording() {
   const eventsRef = useRef<RawMidiEvent[]>([])
@@ -66,11 +72,14 @@ export function useRecording() {
 
     // disarm 경로(재생 유지)는 라이브 transport 위치를,
     // stop 경로(정지)는 stop 직전 스냅샷(recordStopSec)을 종료 시점으로 사용.
-    // transport.stop()이 위치를 0으로 리셋한 뒤 읽어도 dangling 노트가 버려지지 않게 한다.
     const endAbs = stillPlaying ? Tone.getTransport().seconds : recordStopSec
     const endSec = Math.max(0, endAbs - recordStartSec)
 
-    const noteDataList = recordedEventsToNotes(events, {
+    // 카운트인 중(timeSec < 0) 입력 제외.
+    // 카운트인 없는 경우(recordStartSec = Tone seconds) 모든 이벤트는 timeSec >= 0.
+    const contentEvents = events.filter((e) => e.timeSec >= 0)
+
+    const noteDataList = recordedEventsToNotes(contentEvents, {
       ppq: project.transport.ppq,
       tempo: project.transport.tempo,
       quantizeDenom,
@@ -95,7 +104,16 @@ export function useRecording() {
     if (active && !was) {
       // 상승 에지: 새 take 시작 — 버퍼/시작기준/대상트랙 고정
       eventsRef.current = []
-      recordStartSecRef.current = Tone.getTransport().seconds
+      // 카운트인 오프셋이 있으면 그것을 기준으로, 없으면 현재 transport 위치를 기준으로 한다.
+      // - 카운트인 녹음: recordingContentStartSec = countInDur > 0
+      //   → transport가 0부터 시작, 카운트인 구간(0..countInDur) 중 입력은 timeSec < 0 → 필터됨
+      // - 일반 녹음 / arm-after-play: recordingContentStartSec = 0
+      //   → Tone.getTransport().seconds(현재 재생 위치)를 기준으로 기존 동작 유지
+      const { recordingContentStartSec } = useStore.getState()
+      recordStartSecRef.current =
+        recordingContentStartSec > 0 ? recordingContentStartSec : Tone.getTransport().seconds
+      // 소비 후 즉시 리셋: 재-arm 시 stale 오프셋 방지 (같은 세션 재-arm은 Tone.seconds 경로로 fall-through)
+      useStore.getState().setRecordingContentStartSec(0)
       recordTrackIdRef.current = useStore.getState().selectedTrackId
     } else if (!active && was) {
       // 하강 에지: take 커밋

@@ -363,3 +363,183 @@ describe('useRecording', () => {
     expect(useStore.getState().isRecording).toBe(false)
   })
 })
+
+describe('useRecording — 카운트인 타이밍', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    mockSeconds = 0
+    vi.clearAllMocks()
+  })
+
+  it('카운트인 4초: 카운트인 중(0..4s) 입력은 노트로 커밋되지 않는다', () => {
+    const { result } = renderHook(() => useRecording())
+
+    // recordingContentStartSec = 4.0 (2마디 카운트인, 120BPM 4/4)
+    act(() => {
+      useStore.getState().setRecordingContentStartSec(4.0)
+    })
+
+    // arm + play (상승 에지: recordStartSec = 4.0)
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(true)
+      useStore.getState().setRecording(true)
+    })
+
+    // 카운트인 중 입력 (transport.seconds = 1.5, timeSec = 1.5 - 4.0 = -2.5 → 음수)
+    mockSeconds = 1.5
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 })
+    })
+    mockSeconds = 2.0
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 })
+    })
+
+    // 콘텐츠 시작 후 정지
+    mockSeconds = 4.5
+    act(() => {
+      useStore.getState().setRecordStopSec(4.5)
+    })
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
+
+    // 카운트인 중 입력이 제외되어 노트 없음
+    expect(useStore.getState().project.tracks[0]!.notes).toHaveLength(0)
+  })
+
+  it('카운트인 4초: 콘텐츠 구간(4s 이후) 입력은 콘텐츠 기준 시간으로 커밋된다', () => {
+    const { result } = renderHook(() => useRecording())
+
+    act(() => {
+      useStore.getState().setRecordingContentStartSec(4.0)
+    })
+
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(true)
+      useStore.getState().setRecording(true)
+    })
+
+    // 콘텐츠 구간 입력: transport.seconds=4.0, timeSec = 4.0-4.0 = 0.0 (콘텐츠 시작 기준)
+    mockSeconds = 4.0
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 96 })
+    })
+    // noteoff at 4.5s → timeSec=0.5s → duration = 0.5s = 480 ticks (120BPM ppq480)
+    mockSeconds = 4.5
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 })
+    })
+
+    mockSeconds = 5.0
+    act(() => {
+      useStore.getState().setRecordStopSec(5.0)
+    })
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
+
+    const notes = useStore.getState().project.tracks[0]!.notes
+    expect(notes).toHaveLength(1)
+    expect(notes[0]!.pitch).toBe(60)
+    expect(notes[0]!.start).toBe(0) // timeSec=0 → 0 ticks
+    expect(notes[0]!.duration).toBe(480) // 0.5s = 480 ticks
+  })
+
+  it('[fix3] 카운트인 오프셋 소비 후 re-arm 시 stale 오프셋 미사용 단언', () => {
+    const { result } = renderHook(() => useRecording())
+
+    // 카운트인 오프셋 4.0 설정 (useAudio.play()가 하는 작업 시뮬레이션)
+    act(() => {
+      useStore.getState().setRecordingContentStartSec(4.0)
+    })
+
+    // arm + play (상승 에지: recordingContentStartSec=4.0 소비 후 리셋)
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(true)
+      useStore.getState().setRecording(true)
+    })
+
+    // fix3 핵심 단언: 상승 에지에서 소비 즉시 리셋되어야 한다
+    expect(useStore.getState().recordingContentStartSec).toBe(0)
+
+    // take 1 disarm (재생 유지)
+    mockSeconds = 1.0
+    act(() => {
+      useStore.getState().setRecording(false)
+    })
+
+    // 재-arm (transport.seconds = 1.5 — stale 4.0을 쓰면 timeSec=-2.5로 필터됨)
+    mockSeconds = 1.5
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
+
+    // 재-arm 구간에 노트 입력 (timeSec = 1.5 - 1.5 = 0 이어야 함)
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 60, velocity: 100 })
+    })
+    mockSeconds = 2.0
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 60, velocity: 0 })
+    })
+
+    // 정지
+    mockSeconds = 2.5
+    act(() => {
+      useStore.getState().setRecordStopSec(2.5)
+    })
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
+
+    const notes = useStore.getState().project.tracks[0]!.notes
+    // stale 오프셋 미사용: timeSec=0 → 커밋됨 (stale이면 timeSec=-2.5 → 필터 → notes=0)
+    expect(notes).toHaveLength(1)
+    expect(notes[0]!.start).toBe(0)
+  })
+
+  it('카운트인 없음(recordingContentStartSec=0): 기존 arm-after-play 동작이 보존된다', () => {
+    const { result } = renderHook(() => useRecording())
+
+    // recordingContentStartSec = 0 (기본값 — 카운트인 없음)
+    // 재생이 2.0s 진행된 후 arm
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
+    mockSeconds = 2.0
+    act(() => {
+      useStore.getState().setRecording(true)
+    })
+    // arm 시점 transport.seconds=2.0 → recordStartSec = 2.0 (Tone.getTransport().seconds 경로)
+
+    mockSeconds = 2.0
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteon', pitch: 64, velocity: 80 })
+    })
+    mockSeconds = 2.5
+    act(() => {
+      result.current.handleMidiMessage({ type: 'noteoff', pitch: 64, velocity: 0 })
+    })
+
+    mockSeconds = 3.0
+    act(() => {
+      useStore.getState().setRecordStopSec(3.0)
+    })
+    mockSeconds = 0
+    act(() => {
+      useStore.getState().setPlaying(false)
+    })
+
+    const notes = useStore.getState().project.tracks[0]!.notes
+    expect(notes).toHaveLength(1)
+    expect(notes[0]!.start).toBe(0) // timeSec=0 (2.0-2.0) → 0 ticks
+    expect(notes[0]!.duration).toBe(480)
+  })
+})

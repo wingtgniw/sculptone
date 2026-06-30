@@ -6,11 +6,11 @@ import {
   createInstrumentFromSound,
 } from '@sculptone/sound-engine'
 import { createPlaybackEngine, type PlaybackEngine, type MultiInstrument } from './playback'
+import { createMetronome, barsToSeconds, type MetronomeHandle } from './metronome'
 import { useStore } from '../state/store'
 import type { Project, Track } from '@sculptone/score-model'
 
 // ── 캐시 키 ───────────────────────────────────────────────────
-// preset: "preset:<presetId>" / patch: "patch:<JSON>" (모든 필드 변경 감지)
 
 function resolveSoundCacheKey(track: Track): string {
   if (track.sound.kind === 'preset') return `preset:${track.sound.presetId}`
@@ -18,8 +18,6 @@ function resolveSoundCacheKey(track: Track): string {
 }
 
 // ── instrument 생성 분기 ──────────────────────────────────────
-// preset → 기존 createInstrument 경로(기존 mock 호환).
-// patch  → createInstrumentFromSound 경로(신규 mock).
 
 function buildTrackInstrument(track: Track): MultiInstrument & { dispose: () => void } {
   if (track.sound.kind === 'patch') {
@@ -32,19 +30,14 @@ function buildTrackInstrument(track: Track): MultiInstrument & { dispose: () => 
 
 export function useAudio() {
   const instrumentsRef = useRef(new Map<string, ReturnType<typeof buildTrackInstrument>>())
-  const soundKeyRef = useRef(new Map<string, string>()) // trackId → cacheKey
+  const soundKeyRef = useRef(new Map<string, string>())
   const engineRef = useRef<PlaybackEngine | null>(null)
   const playGenRef = useRef(0)
+  // 메트로놈 인스턴스: metronomeEnabled=true일 때만 생성, dispose()로 정리
+  const metronomeRef = useRef<MetronomeHandle | null>(null)
 
-  /**
-   * 프로젝트 트랙과 instrument Map을 동기화한다.
-   * - 삭제된 트랙 → dispose + Map 제거.
-   * - 신규 또는 sound 변경 트랙 → dispose + 재생성.
-   */
   const syncInstruments = useCallback((project: Project) => {
     const currentIds = new Set(project.tracks.map((t) => t.id))
-
-    // 삭제된 트랙 정리
     for (const [trackId, inst] of instrumentsRef.current.entries()) {
       if (!currentIds.has(trackId)) {
         inst.dispose()
@@ -52,8 +45,6 @@ export function useAudio() {
         soundKeyRef.current.delete(trackId)
       }
     }
-
-    // 신규 또는 sound 변경 트랙
     for (const track of project.tracks) {
       const key = resolveSoundCacheKey(track)
       const cachedKey = soundKeyRef.current.get(track.id)
@@ -66,8 +57,40 @@ export function useAudio() {
   }, [])
 
   const play = useCallback(() => {
-    const { project, isRecording } = useStore.getState()
+    const { project, isRecording, metronomeEnabled, countInBars, setRecordingContentStartSec } =
+      useStore.getState()
+
     syncInstruments(project)
+
+    // ── 카운트인 오프셋 계산 ──────────────────────────────────
+    // isRecording 중이고 countInBars > 0일 때만 카운트인 적용.
+    // 재생 전용(isRecording=false)이나 카운트인 없으면 0.
+    const countInDurationSec =
+      metronomeEnabled && isRecording && countInBars > 0
+        ? barsToSeconds(
+            countInBars,
+            project.transport.tempo,
+            project.transport.timeSignature as [number, number],
+          )
+        : 0
+
+    // recordingContentStartSec를 동기적으로 설정 — useRecording 상승 에지가
+    // 이 값을 읽을 때 반드시 최신값이어야 한다 (React 18 automatic batching 활용).
+    setRecordingContentStartSec(countInDurationSec)
+
+    // ── 메트로놈 인스턴스 관리 ────────────────────────────────
+    if (metronomeEnabled) {
+      // 인스턴스가 없으면 새로 생성 (이전 play에서 이미 생성했으면 재사용)
+      if (!metronomeRef.current) {
+        metronomeRef.current = createMetronome()
+      }
+    } else {
+      // metronomeEnabled=false면 기존 인스턴스 정리
+      if (metronomeRef.current) {
+        metronomeRef.current.dispose()
+        metronomeRef.current = null
+      }
+    }
 
     const gen = ++playGenRef.current
 
@@ -81,7 +104,11 @@ export function useAudio() {
         useStore.getState().setPlaying(false)
       },
       () => playGenRef.current === gen,
-      { keepAlive: isRecording },
+      {
+        keepAlive: isRecording,
+        metronome: metronomeRef.current ?? undefined,
+        countInDurationSec,
+      },
     )
   }, [syncInstruments])
 
@@ -101,6 +128,9 @@ export function useAudio() {
       for (const inst of instrumentsRef.current.values()) inst.dispose()
       instrumentsRef.current.clear()
       soundKeyRef.current.clear()
+      // 메트로놈 정리
+      metronomeRef.current?.dispose()
+      metronomeRef.current = null
     }
   }, [])
 

@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react'
 import { useStore } from '../state/store'
 import { Badge } from '../ui/Badge'
 
@@ -9,8 +10,12 @@ interface Props {
 export function TransportBar({ onPlay, onStop }: Props) {
   const isPlaying = useStore((s) => s.isPlaying)
   const isRecording = useStore((s) => s.isRecording)
+  const metronomeEnabled = useStore((s) => s.metronomeEnabled)
+  const countInBars = useStore((s) => s.countInBars)
   const setPlaying = useStore((s) => s.setPlaying)
   const setRecording = useStore((s) => s.setRecording)
+  const setMetronomeEnabled = useStore((s) => s.setMetronomeEnabled)
+  const setCountInBars = useStore((s) => s.setCountInBars)
   const tempo = useStore((s) => s.project.transport.tempo)
 
   const handlePlay = () => {
@@ -23,6 +28,12 @@ export function TransportBar({ onPlay, onStop }: Props) {
   }
   const handleRecord = () => {
     setRecording(!isRecording)
+  }
+  const handleMetronome = () => {
+    setMetronomeEnabled(!metronomeEnabled)
+  }
+  const handleCountIn = (e: ChangeEvent<HTMLSelectElement>) => {
+    setCountInBars(Number(e.target.value))
   }
 
   const tbtn = {
@@ -81,7 +92,43 @@ export function TransportBar({ onPlay, onStop }: Props) {
         ⏹
       </button>
 
-      {/* 템포 + 녹음 상태 */}
+      {/* 메트로놈 토글 */}
+      <button
+        aria-label="메트로놈"
+        aria-pressed={metronomeEnabled}
+        onClick={handleMetronome}
+        style={{
+          ...tbtn,
+          background: metronomeEnabled ? 'var(--accent)' : 'var(--bg-elevated)',
+          color: metronomeEnabled ? 'var(--on-accent)' : 'var(--text-hi)',
+        }}
+      >
+        ♩
+      </button>
+
+      {/* 카운트인 선택 */}
+      <select
+        aria-label="카운트인"
+        value={countInBars}
+        disabled={!metronomeEnabled}
+        onChange={handleCountIn}
+        style={{
+          font: 'inherit',
+          fontSize: 11,
+          padding: '2px 4px',
+          borderRadius: 'var(--r-sm)',
+          border: '1px solid var(--border)',
+          cursor: metronomeEnabled ? 'pointer' : 'default',
+          background: 'var(--bg-elevated)',
+          color: 'var(--text-mid)',
+        }}
+      >
+        <option value={0}>카운트인 없음</option>
+        <option value={1}>1마디</option>
+        <option value={2}>2마디</option>
+      </select>
+
+      {/* 템포 + 재생 상태 */}
       <span className="mono" style={{ marginLeft: 10, color: 'var(--text-mid)', fontSize: 13 }}>
         {tempo} BPM {isPlaying ? '· ▶' : ''}
       </span>

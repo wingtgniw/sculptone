@@ -34,6 +34,31 @@ describe('files', () => {
       expect(buf).toBeInstanceOf(ArrayBuffer)
       expect(new Uint8Array(buf)).toEqual(content)
     })
+
+    it('FileReader 오류 시 promise가 reject된다', async () => {
+      const err = new DOMException('read error', 'NotReadableError')
+      const mockReaderState: {
+        error: DOMException
+        onerror: null | (() => void)
+        readAsArrayBuffer: (file: Blob) => void
+      } = {
+        error: err,
+        onerror: null,
+        readAsArrayBuffer(_file: Blob) {
+          // onload/onerror 할당 후 비동기로 onerror 호출
+          queueMicrotask(() => mockReaderState.onerror?.())
+        },
+      }
+      vi.stubGlobal('FileReader', function () {
+        return mockReaderState
+      })
+      try {
+        const file = new File([], 'bad.mid')
+        await expect(readFileAsArrayBuffer(file)).rejects.toBe(err)
+      } finally {
+        vi.unstubAllGlobals()
+      }
+    })
   })
 
   describe('downloadBytes', () => {

@@ -2,6 +2,7 @@ import * as Tone from 'tone'
 import type { Project } from '@sculptone/score-model'
 import { ticksToSeconds } from '../compose/time'
 import { audibleTrackIds, buildMultiSchedule, linearToDb } from './multitrack'
+import { computeClickTimes, beatDurationSec, type MetronomeHandle } from './metronome'
 
 // ── 기존 buildSchedule (단일 트랙) — backward compat, 테스트 보존 ──
 
@@ -31,9 +32,17 @@ export interface MultiInstrument {
   volume: { value: number }
 }
 
-/** play 옵션. keepAlive: 녹음 모드 — 노트가 없거나 끝나도 Stop 전까지 transport를 유지(자동종료 미등록). */
+/**
+ * play 옵션.
+ * - keepAlive: 녹음 모드 — 노트가 없거나 끝나도 Stop 전까지 transport를 유지(자동종료 미등록).
+ * - metronome: 제공되면 재생 구간 전체 박에 클릭 이벤트를 스케줄한다.
+ * - countInDurationSec: > 0이면 content 노트 스케줄을 이 값만큼 오프셋하고,
+ *   0..countInDurationSec 구간에 카운트인 클릭을 추가 스케줄한다.
+ */
 export interface PlayOptions {
   keepAlive?: boolean
+  metronome?: MetronomeHandle
+  countInDurationSec?: number
 }
 
 export interface PlaybackEngine {
@@ -65,6 +74,9 @@ export function createPlaybackEngine(
       transport.cancel()
       transport.bpm.value = project.transport.tempo
 
+      const countInDurationSec = opts?.countInDurationSec ?? 0
+      const metronome = opts?.metronome
+
       const audibleIds = audibleTrackIds(project)
       const items = buildMultiSchedule(project, audibleIds)
 
@@ -78,16 +90,52 @@ export function createPlaybackEngine(
         instMap.set(trackId, inst)
       }
 
+      // 노트 스케줄: countInDurationSec만큼 오프셋
       for (const item of items) {
         const inst = instMap.get(item.trackId)
         if (!inst) continue
+        const scheduledAt = item.timeSec + countInDurationSec
         transport.schedule((time) => {
           const note = Tone.Frequency(item.pitch, 'midi').toNote()
           inst.triggerAttackRelease(note, item.durationSec, time, item.velocity)
-        }, item.timeSec)
+        }, scheduledAt)
       }
 
-      const endSec = items.reduce((m, it) => Math.max(m, it.timeSec + it.durationSec), 0)
+      const contentEndSec = items.reduce((m, it) => Math.max(m, it.timeSec + it.durationSec), 0)
+      const totalDurationSec = countInDurationSec + contentEndSec
+
+      // 메트로놈 클릭 스케줄
+      if (metronome) {
+        if (opts?.keepAlive) {
+          // keepAlive 녹음: 박 간격 연속 클릭 (빈 콘텐츠+카운트인 포함, 콘텐츠 끝 이후도 계속)
+          const beatDur = beatDurationSec(project.transport.tempo)
+          const beatsPerBar = (project.transport.timeSignature as [number, number])[0]
+          let beatIndex = 0
+          transport.scheduleRepeat(
+            (time) => {
+              metronome.click(time, beatIndex % beatsPerBar === 0)
+              beatIndex++
+            },
+            beatDur,
+            0,
+          )
+        } else if (totalDurationSec > 0) {
+          // 유한 재생: 카운트인 포함 전체 구간 클릭 스케줄
+          const clicks = computeClickTimes(
+            project.transport.tempo,
+            project.transport.timeSignature as [number, number],
+            0,
+            totalDurationSec,
+          )
+          for (const click of clicks) {
+            transport.schedule((time) => {
+              metronome.click(time, click.accent)
+            }, click.timeSec)
+          }
+        }
+      }
+
+      const endSec = totalDurationSec
       if (opts?.keepAlive) {
         // 녹음 모드: 빈 트랙(endSec===0)이어도 transport를 시작해 Stop 전까지 유지.
         // 자동종료(scheduleOnce)/onEnded를 등록하지 않는다 — 사용자가 Stop할 때까지 녹음 지속.

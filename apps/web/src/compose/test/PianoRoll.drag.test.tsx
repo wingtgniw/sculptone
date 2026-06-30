@@ -214,6 +214,27 @@ describe('PianoRoll drag smoke', () => {
     expect(notes[0]!.start).toBe(240) // 원래 위치로 복구
   })
 
+  // ── Fix #5 회귀: pointercancel 시 dragRef 초기화 (handleDragRelease) ─
+
+  it('pointercancel 시 dragRef가 초기화되어 이후 pointermove가 무시된다', () => {
+    render(<PianoRoll />)
+    const noteEl = screen.getByTestId('note')
+    const container = screen.getByTestId('pianoroll')
+
+    act(() => {
+      firePointerEvent(noteEl, 'pointerdown', 100, 200)
+      // pointercancel → handleDragRelease → dragRef = null
+      firePointerEvent(container, 'pointercancel', 100, 200)
+      // 이후 pointermove는 dragRef가 null이므로 무시됨
+      firePointerEvent(container, 'pointermove', 200, 200)
+    })
+
+    const tid = useStore.getState().selectedTrackId
+    const track = useStore.getState().project.tracks.find((t) => t.id === tid)!
+    // cancel 이후 이동했지만 start는 변경되지 않아야 한다
+    expect(track.notes[0]!.start).toBe(240)
+  })
+
   // ── Fix #6 스모크: 수직 드래그로 pitch가 변한다 ─────────────────────
 
   it('수직 드래그(dy=2레인, clientX 고정)로 노트 pitch가 감소한다 (Fix #6)', () => {

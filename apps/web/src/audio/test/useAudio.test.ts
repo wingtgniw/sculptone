@@ -11,6 +11,7 @@ const mockTransport = {
   cancel: vi.fn(),
   schedule: vi.fn(),
   scheduleOnce: vi.fn(),
+  scheduleRepeat: vi.fn(),
   get seconds() {
     return mockSeconds
   },
@@ -42,6 +43,44 @@ vi.mock('@sculptone/sound-engine', () => ({
   })),
 }))
 
+// metronome 모킹: createMetronome → spy 핸들
+const mockMetronomeClick = vi.fn()
+const mockMetronomeDispose = vi.fn()
+vi.mock('../metronome', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('../metronome')>()
+  return {
+    ...orig, // 순수 함수(computeClickTimes 등)는 실제 구현 사용
+    createMetronome: vi.fn(() => ({
+      click: mockMetronomeClick,
+      dispose: mockMetronomeDispose,
+    })),
+  }
+})
+
+// playback 모킹: createPlaybackEngine의 play를 가로채 opts를 캡처한다.
+// 실제 엔진(transport 호출 포함)에 위임하므로 기존 테스트에 영향 없음.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let lastPlayOpts: any = undefined
+vi.mock('../playback', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('../playback')>()
+  return {
+    ...orig,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createPlaybackEngine: (getInstrument: any) => {
+      const engine = orig.createPlaybackEngine(getInstrument)
+      const origPlay = engine.play
+      return {
+        ...engine,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        play: vi.fn(async (project: any, onEnded: any, isValid: any, opts: any) => {
+          lastPlayOpts = opts
+          return origPlay.call(engine, project, onEnded, isValid, opts)
+        }),
+      }
+    },
+  }
+})
+
 import { createInstrument, createInstrumentFromSound } from '@sculptone/sound-engine'
 import { useAudio } from '../useAudio'
 import { createTrack, addTrack, updateTrackSound } from '@sculptone/score-model'
@@ -50,12 +89,16 @@ describe('useAudio — 멀티트랙 instrument 관리', () => {
   beforeEach(() => {
     useStore.setState(useStore.getInitialState(), true)
     mockSeconds = 0
+    lastPlayOpts = undefined
     vi.clearAllMocks()
     mockTransport.start.mockClear()
     mockTransport.stop.mockClear()
     mockTransport.cancel.mockClear()
     mockTransport.schedule.mockClear()
     mockTransport.scheduleOnce.mockClear()
+    mockTransport.scheduleRepeat.mockClear()
+    mockMetronomeClick.mockClear()
+    mockMetronomeDispose.mockClear()
   })
 
   it('play() 호출 시 프로젝트의 모든 트랙에 대해 instrument가 생성된다', async () => {
@@ -183,6 +226,7 @@ describe('useAudio — patch instrument 관리', () => {
   beforeEach(() => {
     useStore.setState(useStore.getInitialState(), true)
     mockSeconds = 0
+    lastPlayOpts = undefined
     vi.clearAllMocks()
   })
 
@@ -284,5 +328,105 @@ describe('useAudio — patch instrument 관리', () => {
 
     expect(createInstrumentFromSound).toHaveBeenCalledTimes(1)
     expect(mockPatchDispose).not.toHaveBeenCalled()
+  })
+})
+
+describe('useAudio — 메트로놈 + 카운트인', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    mockSeconds = 0
+    lastPlayOpts = undefined
+    vi.clearAllMocks()
+  })
+
+  it('metronomeEnabled=true면 play() 시 createMetronome이 반환한 핸들이 엔진에 전달된다', async () => {
+    const { createMetronome } = await import('../metronome')
+    act(() => {
+      useStore.getState().setMetronomeEnabled(true)
+    })
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+
+    // createMetronome이 호출되어야 함 (최초 마운트 또는 첫 play 시)
+    expect(createMetronome).toHaveBeenCalled()
+  })
+
+  it('metronomeEnabled=false면 play() 시 createMetronome을 호출하지 않는다', async () => {
+    const { createMetronome } = await import('../metronome')
+    // 기본값 metronomeEnabled=false
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+
+    expect(createMetronome).not.toHaveBeenCalled()
+  })
+
+  it('isRecording=true, countInBars=2이면 recordingContentStartSec가 barsToSeconds(2,...) 값으로 설정된다', async () => {
+    act(() => {
+      useStore.getState().setMetronomeEnabled(true) // 카운트인은 메트로놈 ON 상태에서만 동작
+      useStore.getState().setRecording(true)
+      useStore.getState().setCountInBars(2)
+    })
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+
+    // tempo=120(기본), timeSignature=[4,4](기본), 2마디 = 4.0s
+    const sec = useStore.getState().recordingContentStartSec
+    expect(sec).toBeCloseTo(4.0)
+  })
+
+  it('isRecording=false이면 countInBars>0이어도 recordingContentStartSec=0을 유지한다', async () => {
+    act(() => {
+      // isRecording=false (기본)
+      useStore.getState().setCountInBars(2)
+    })
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+
+    expect(useStore.getState().recordingContentStartSec).toBe(0)
+  })
+
+  it('[fix2] metronomeEnabled=false면 countInBars>0 + isRecording=true여도 recordingContentStartSec=0 (카운트인 없음)', async () => {
+    act(() => {
+      // metronomeEnabled는 기본 false 유지
+      useStore.getState().setRecording(true)
+      useStore.getState().setCountInBars(2)
+    })
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+
+    // 메트로놈 off 상태에서 카운트인은 0이어야 한다 (무음 지연 없음)
+    expect(useStore.getState().recordingContentStartSec).toBe(0)
+  })
+
+  it('[fix5] metronomeEnabled=true이면 play opts.metronome이 createMetronome 핸들과 동일 참조다', async () => {
+    const { createMetronome } = await import('../metronome')
+    act(() => {
+      useStore.getState().setMetronomeEnabled(true)
+    })
+
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+
+    // createMetronome mock이 반환한 핸들이 engine.play opts.metronome으로 전달되어야 한다
+    const metroHandle = (createMetronome as ReturnType<typeof vi.fn>).mock.results[0]?.value
+    expect(lastPlayOpts).toBeDefined()
+    expect(lastPlayOpts).toEqual(expect.objectContaining({ metronome: metroHandle }))
   })
 })

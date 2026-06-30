@@ -273,6 +273,84 @@ describe('SoundDesignPanel — Oscillator 섹션', () => {
   })
 })
 
+describe('SoundDesignPanel — 미커버 핸들러 보강', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    vi.clearAllMocks()
+  })
+
+  it('Preset select 변경 시 sound.presetId가 갱신된다', async () => {
+    const s = useStore.getState()
+    s.setSoundPanelTrackId(s.selectedTrackId)
+    render(<SoundDesignPanel />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: /sound preset/i }),
+      'synth-lead',
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'preset' && updated.sound.presetId).toBe('synth-lead')
+  })
+
+  it('Filter 활성화 후 Filter type 변경 시 filter.type이 갱신된다', async () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        ...BASE_PATCH,
+        filter: { type: 'lowpass' as const, frequency: 2000, Q: 1 },
+      }),
+    )
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: /filter type/i }),
+      'highpass',
+    )
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.filter?.type).toBe('highpass')
+  })
+
+  it('Filter 활성화 후 Cutoff 슬라이더 변경 시 filter.frequency가 갱신된다', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        ...BASE_PATCH,
+        filter: { type: 'lowpass' as const, frequency: 2000, Q: 1 },
+      }),
+    )
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    fireEvent.change(screen.getByRole('slider', { name: /filter frequency/i }), {
+      target: { value: '5000' },
+    })
+    const updated = useStore.getState().project.tracks[0]!
+    expect(updated.sound.kind === 'patch' && updated.sound.filter?.frequency).toBe(5000)
+  })
+
+  it('Reverb 활성화 후 Wet 슬라이더 변경 시 reverb.wet이 갱신된다', () => {
+    const s = useStore.getState()
+    const trackId = s.selectedTrackId
+    s.setProject(
+      updateTrackSound(s.project, trackId, {
+        ...BASE_PATCH,
+        effects: [{ type: 'reverb' as const, wet: 0.3, decay: 2 }],
+      }),
+    )
+    s.setSoundPanelTrackId(trackId)
+    render(<SoundDesignPanel />)
+    fireEvent.change(screen.getByRole('slider', { name: /reverb wet/i }), {
+      target: { value: '0.7' },
+    })
+    const updated = useStore.getState().project.tracks[0]!
+    if (updated.sound.kind === 'patch') {
+      const reverbFx = (updated.sound.effects ?? []).find((fx) => fx.type === 'reverb') as
+        { type: 'reverb'; wet: number; decay: number } | undefined
+      expect(reverbFx?.wet).toBeCloseTo(0.7)
+    }
+  })
+})
+
 describe('SoundDesignPanel — LFO 섹션', () => {
   beforeEach(() => {
     useStore.setState(useStore.getInitialState(), true)
