@@ -90,4 +90,48 @@ describe('editor store', () => {
     useStore.getState().setCountInBars(2)
     expect(useStore.getState().countInBars).toBe(2)
   })
+
+  // ── 루프 상태 ─────────────────────────────────────────────
+
+  it('초기 loopEnabled는 false이다', () => {
+    expect(useStore.getState().loopEnabled).toBe(false)
+  })
+
+  it('setLoopEnabled(true) → loopEnabled true, setLoopEnabled(false) → false', () => {
+    useStore.getState().setLoopEnabled(true)
+    expect(useStore.getState().loopEnabled).toBe(true)
+    useStore.getState().setLoopEnabled(false)
+    expect(useStore.getState().loopEnabled).toBe(false)
+  })
+
+  it('초기 loopStartTicks=0, loopEndTicks=7680', () => {
+    expect(useStore.getState().loopStartTicks).toBe(0)
+    expect(useStore.getState().loopEndTicks).toBe(7680)
+  })
+
+  it('setLoopRegion(0, 1920) → loopStartTicks=0, loopEndTicks=1920', () => {
+    useStore.getState().setLoopRegion(0, 1920)
+    expect(useStore.getState().loopStartTicks).toBe(0)
+    expect(useStore.getState().loopEndTicks).toBe(1920)
+  })
+
+  it('setLoopRegion(불변식 위반: start >= end) → normalizeLoop가 end를 보정', () => {
+    useStore.getState().setLoopRegion(960, 240)
+    // normalizeLoop(960, 240): s=960, e=240<960 → e=960+1=961
+    const { loopStartTicks, loopEndTicks } = useStore.getState()
+    expect(loopStartTicks).toBe(960)
+    expect(loopEndTicks).toBe(961)
+  })
+
+  it('setLoopRegion(음수 start, 음수 end) → 양단 클램프', () => {
+    useStore.getState().setLoopRegion(-100, -50)
+    expect(useStore.getState().loopStartTicks).toBe(0)
+    expect(useStore.getState().loopEndTicks).toBe(1)
+  })
+
+  it('setLoopRegion 후 loopEnabled는 변경되지 않는다 (독립 setter)', () => {
+    useStore.getState().setLoopEnabled(true)
+    useStore.getState().setLoopRegion(0, 480)
+    expect(useStore.getState().loopEnabled).toBe(true)
+  })
 })

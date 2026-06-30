@@ -3,6 +3,7 @@ import { useStore, type Mode } from '../state/store'
 import { Tabs } from '../ui/Tabs'
 import { FileMenu } from '../ui/FileMenu'
 import { PianoRoll } from '../compose/PianoRoll'
+import { LoopStrip } from '../compose/LoopStrip'
 import { TracksPanel } from '../compose/TracksPanel'
 import { Inspector } from '../compose/Inspector'
 import { Playhead } from '../compose/Playhead'
@@ -246,6 +247,7 @@ export function AppShell() {
         <div style={{ background: 'var(--bg-inset)', position: 'relative', overflow: 'auto' }}>
           {activeMode === 'compose' && composeView === 'roll' && (
             <div style={{ position: 'relative' }}>
+              <LoopStrip />
               <PianoRoll />
               <Playhead getSeconds={getSeconds} />
             </div>

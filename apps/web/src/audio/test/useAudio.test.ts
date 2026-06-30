@@ -6,6 +6,8 @@ import { useStore } from '../../state/store'
 let mockSeconds = 0
 const mockTransport = {
   bpm: { value: 120 },
+  loop: false, // NEW: 루프 배선 스모크 검증용
+  setLoopPoints: vi.fn(), // NEW
   start: vi.fn(),
   stop: vi.fn(),
   cancel: vi.fn(),
@@ -428,5 +430,62 @@ describe('useAudio — 메트로놈 + 카운트인', () => {
     const metroHandle = (createMetronome as ReturnType<typeof vi.fn>).mock.results[0]?.value
     expect(lastPlayOpts).toBeDefined()
     expect(lastPlayOpts).toEqual(expect.objectContaining({ metronome: metroHandle }))
+  })
+})
+
+describe('useAudio — 루프 배선', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+    mockTransport.loop = false
+    lastPlayOpts = undefined // #8: beforeEach에서 리셋
+    vi.clearAllMocks()
+  })
+
+  it('loopEnabled=false(기본) → engine.play에 loopEnabled=false 전달', async () => {
+    // 기본 상태: loopEnabled=false
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+    // #8: lastPlayOpts로 실제 전달 값 검증 (동어반복 제거)
+    expect(lastPlayOpts).toBeDefined()
+    expect(lastPlayOpts).toEqual(expect.objectContaining({ loopEnabled: false }))
+  })
+
+  it('loopEnabled=true로 설정 후 play() → engine.play에 loopEnabled=true+구간 전달, transport.loop=true (통합 경로)', async () => {
+    act(() => {
+      useStore.getState().setLoopEnabled(true)
+      useStore.getState().setLoopRegion(0, 1920)
+    })
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+    // #8: lastPlayOpts로 실제 전달 값 검증
+    expect(lastPlayOpts).toBeDefined()
+    expect(lastPlayOpts).toEqual(
+      expect.objectContaining({
+        loopEnabled: true,
+        loopStartTicks: 0,
+        loopEndTicks: 1920,
+      }),
+    )
+    // 통합 경로: Tone transport mock에서 loop=true가 설정되어야 함
+    const toneTransport = (await import('tone')).getTransport()
+    expect((toneTransport as { loop: boolean }).loop).toBe(true)
+  })
+
+  it('loopEnabled=true, keepAlive=true(녹음 가드) → transport.loop=false', async () => {
+    act(() => {
+      useStore.getState().setLoopEnabled(true)
+      useStore.getState().setRecording(true) // keepAlive 유발
+    })
+    const { result } = renderHook(() => useAudio())
+    await act(async () => {
+      result.current.play()
+    })
+    const toneTransport = (await import('tone')).getTransport()
+    // keepAlive=true이면 effectiveLoopEnabled=false → loop=false
+    expect((toneTransport as { loop: boolean }).loop).toBe(false)
   })
 })

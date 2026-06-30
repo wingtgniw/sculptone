@@ -12,10 +12,12 @@ export function TransportBar({ onPlay, onStop }: Props) {
   const isRecording = useStore((s) => s.isRecording)
   const metronomeEnabled = useStore((s) => s.metronomeEnabled)
   const countInBars = useStore((s) => s.countInBars)
+  const loopEnabled = useStore((s) => s.loopEnabled)
   const setPlaying = useStore((s) => s.setPlaying)
   const setRecording = useStore((s) => s.setRecording)
   const setMetronomeEnabled = useStore((s) => s.setMetronomeEnabled)
   const setCountInBars = useStore((s) => s.setCountInBars)
+  const setLoopEnabled = useStore((s) => s.setLoopEnabled)
   const tempo = useStore((s) => s.project.transport.tempo)
 
   const handlePlay = () => {
@@ -34,6 +36,9 @@ export function TransportBar({ onPlay, onStop }: Props) {
   }
   const handleCountIn = (e: ChangeEvent<HTMLSelectElement>) => {
     setCountInBars(Number(e.target.value))
+  }
+  const handleLoop = () => {
+    setLoopEnabled(!loopEnabled)
   }
 
   const tbtn = {
@@ -104,6 +109,21 @@ export function TransportBar({ onPlay, onStop }: Props) {
         }}
       >
         ♩
+      </button>
+
+      {/* 루프 토글 — #fix6: 재생 중에는 disabled */}
+      <button
+        aria-label="루프"
+        aria-pressed={loopEnabled}
+        disabled={isPlaying}
+        onClick={handleLoop}
+        style={{
+          ...tbtn,
+          background: loopEnabled ? 'var(--accent)' : 'var(--bg-elevated)',
+          color: loopEnabled ? 'var(--on-accent)' : 'var(--text-hi)',
+        }}
+      >
+        ↺
       </button>
 
       {/* 카운트인 선택 */}

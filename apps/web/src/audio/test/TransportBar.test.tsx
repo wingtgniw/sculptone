@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useStore } from '../../state/store'
 import { TransportBar } from '../TransportBar'
@@ -85,5 +85,43 @@ describe('TransportBar', () => {
     render(<TransportBar onPlay={() => {}} onStop={() => {}} />)
     await userEvent.selectOptions(screen.getByRole('combobox', { name: '카운트인' }), '2')
     expect(useStore.getState().countInBars).toBe(2)
+  })
+})
+
+describe('TransportBar — 루프 토글', () => {
+  beforeEach(() => {
+    useStore.setState(useStore.getInitialState(), true)
+  })
+
+  it('루프 버튼이 aria-label="루프"로 렌더된다', () => {
+    render(<TransportBar onPlay={vi.fn()} onStop={vi.fn()} />)
+    expect(screen.getByRole('button', { name: '루프' })).toBeInTheDocument()
+  })
+
+  it('루프 버튼 클릭 → loopEnabled 토글', async () => {
+    render(<TransportBar onPlay={vi.fn()} onStop={vi.fn()} />)
+    const loopBtn = screen.getByRole('button', { name: '루프' })
+    expect(useStore.getState().loopEnabled).toBe(false)
+    await userEvent.click(loopBtn)
+    expect(useStore.getState().loopEnabled).toBe(true)
+    await userEvent.click(loopBtn)
+    expect(useStore.getState().loopEnabled).toBe(false)
+  })
+
+  it('loopEnabled=true 시 버튼의 aria-pressed가 true이다', () => {
+    act(() => {
+      useStore.getState().setLoopEnabled(true)
+    })
+    render(<TransportBar onPlay={vi.fn()} onStop={vi.fn()} />)
+    const loopBtn = screen.getByRole('button', { name: '루프' })
+    expect(loopBtn).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('[fix6] 재생 중(isPlaying=true)에는 루프 버튼이 disabled이다', () => {
+    act(() => {
+      useStore.getState().setPlaying(true)
+    })
+    render(<TransportBar onPlay={vi.fn()} onStop={vi.fn()} />)
+    expect(screen.getByRole('button', { name: '루프' })).toBeDisabled()
   })
 })

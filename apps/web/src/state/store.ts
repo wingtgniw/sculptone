@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { createEmptyProject, createTrack, addTrack, type Project } from '@sculptone/score-model'
+import { normalizeLoop } from '../compose/loop'
 import {
   createHistory,
   record,
@@ -48,6 +49,25 @@ export interface AppState {
    * 외부에서 직접 변경하지 말 것.
    */
   recordingContentStartSec: number
+  /** 루프 구간 활성화. 기본 false. 재생 전용 — 녹음 중(keepAlive)에는 엔진이 강제 비활성. */
+  loopEnabled: boolean
+  /**
+   * 루프 시작(틱). 기본 0.
+   * 불변식: loopStartTicks < loopEndTicks, 둘 다 >= 0.
+   * setLoopRegion으로만 갱신 — normalizeLoop가 항상 적용된다.
+   */
+  loopStartTicks: number
+  /**
+   * 루프 종료(틱). 기본 7680 (ppq480 × 4마디).
+   * setLoopRegion으로만 갱신.
+   */
+  loopEndTicks: number
+  setLoopEnabled: (enabled: boolean) => void
+  /**
+   * 루프 구간을 설정한다. normalizeLoop를 내부 적용해 항상 불변식을 보장한다.
+   * 직접 loopStartTicks/loopEndTicks를 변경하지 말 것.
+   */
+  setLoopRegion: (startTicks: number, endTicks: number) => void
   setMetronomeEnabled: (enabled: boolean) => void
   setCountInBars: (bars: number) => void
   setRecordingContentStartSec: (sec: number) => void
@@ -126,6 +146,14 @@ export const useStore = create<AppState>((set) => ({
   metronomeEnabled: false,
   countInBars: 0,
   recordingContentStartSec: 0,
+  loopEnabled: false,
+  loopStartTicks: 0,
+  loopEndTicks: 7680,
+  setLoopEnabled: (enabled) => set({ loopEnabled: enabled }),
+  setLoopRegion: (startTicks, endTicks) => {
+    const { loopStart, loopEnd } = normalizeLoop(startTicks, endTicks)
+    set({ loopStartTicks: loopStart, loopEndTicks: loopEnd })
+  },
   setMetronomeEnabled: (enabled) =>
     set(enabled ? { metronomeEnabled: true } : { metronomeEnabled: false, countInBars: 0 }),
   setCountInBars: (bars) => set({ countInBars: bars }),

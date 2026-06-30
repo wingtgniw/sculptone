@@ -57,8 +57,16 @@ export function useAudio() {
   }, [])
 
   const play = useCallback(() => {
-    const { project, isRecording, metronomeEnabled, countInBars, setRecordingContentStartSec } =
-      useStore.getState()
+    const {
+      project,
+      isRecording,
+      metronomeEnabled,
+      countInBars,
+      setRecordingContentStartSec,
+      loopEnabled, // NEW
+      loopStartTicks, // NEW
+      loopEndTicks, // NEW
+    } = useStore.getState()
 
     syncInstruments(project)
 
@@ -108,6 +116,9 @@ export function useAudio() {
         keepAlive: isRecording,
         metronome: metronomeRef.current ?? undefined,
         countInDurationSec,
+        loopEnabled, // NEW
+        loopStartTicks, // NEW
+        loopEndTicks, // NEW
       },
     )
   }, [syncInstruments])

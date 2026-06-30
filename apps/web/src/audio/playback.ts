@@ -34,19 +34,23 @@ export interface MultiInstrument {
 
 /**
  * play 옵션.
- * - keepAlive: 녹음 모드 — 노트가 없거나 끝나도 Stop 전까지 transport를 유지(자동종료 미등록).
- * - metronome: 제공되면 재생 구간 전체 박에 클릭 이벤트를 스케줄한다.
- * - countInDurationSec: > 0이면 content 노트 스케줄을 이 값만큼 오프셋하고,
- *   0..countInDurationSec 구간에 카운트인 클릭을 추가 스케줄한다.
+ * - keepAlive: 녹음 모드 — 노트가 없거나 끝나도 Stop 전까지 transport를 유지.
+ * - metronome: 재생 구간 전체 박에 클릭 이벤트를 스케줄한다.
+ * - countInDurationSec: > 0이면 content 노트를 이 값만큼 오프셋.
+ * - loopEnabled: true이면 transport.loop=true + setLoopPoints. keepAlive 시 강제 false(녹음 가드).
+ * - loopStartTicks: 루프 시작(틱). loopEnabled=true 시 사용.
+ * - loopEndTicks: 루프 종료(틱). loopEnabled=true 시 사용.
  */
 export interface PlayOptions {
   keepAlive?: boolean
   metronome?: MetronomeHandle
   countInDurationSec?: number
+  loopEnabled?: boolean
+  loopStartTicks?: number
+  loopEndTicks?: number
 }
 
 export interface PlaybackEngine {
-  /** 프로젝트 전체를 audibleTrackIds 기준으로 재생. onEnded: 마지막 노트 후 호출. isValid: cold-start 레이스 가드. */
   play: (
     project: Project,
     onEnded?: () => void,
@@ -68,19 +72,34 @@ export function createPlaybackEngine(
   return {
     async play(project, onEnded, isValid, opts) {
       await Tone.start()
-      // cold-start await 동안 stop/언마운트가 발생했으면 무시
       if (isValid && !isValid()) return
       transport.stop()
       transport.cancel()
       transport.bpm.value = project.transport.tempo
 
+      const { ppq, tempo } = project.transport
       const countInDurationSec = opts?.countInDurationSec ?? 0
       const metronome = opts?.metronome
+
+      // ── 녹음 가드: keepAlive(녹음 모드) 중에는 루프 강제 비활성 ──
+      // 녹음 타이밍(recordingContentStartSec)이 루프 반복으로 어긋나지 않도록 보호.
+      const effectiveLoopEnabled = (opts?.loopEnabled ?? false) && !(opts?.keepAlive ?? false)
+
+      // #fix1: loopStartSec를 블록 밖으로 호이스트 — start() offset에 사용
+      const loopStartSec = ticksToSeconds(opts?.loopStartTicks ?? 0, ppq, tempo)
+
+      if (effectiveLoopEnabled) {
+        const loopEndSec = ticksToSeconds(opts?.loopEndTicks ?? 0, ppq, tempo)
+        transport.loop = true
+        transport.setLoopPoints(loopStartSec, loopEndSec)
+      } else {
+        // 이전 play에서 loop=true였을 경우를 위해 항상 리셋
+        transport.loop = false
+      }
 
       const audibleIds = audibleTrackIds(project)
       const items = buildMultiSchedule(project, audibleIds)
 
-      // play 시점에 audible 트랙별 instrument 가져오고 volume 적용
       const instMap = new Map<string, MultiInstrument>()
       for (const trackId of audibleIds) {
         const inst = getInstrument(trackId)
@@ -104,11 +123,12 @@ export function createPlaybackEngine(
       const contentEndSec = items.reduce((m, it) => Math.max(m, it.timeSec + it.durationSec), 0)
       const totalDurationSec = countInDurationSec + contentEndSec
 
-      // 메트로놈 클릭 스케줄
+      // ── 메트로놈 클릭 스케줄 ──────────────────────────────────
+      // keepAlive(녹음) 또는 루프 모드: scheduleRepeat로 무한 연속 클릭.
+      // 유한 재생: computeClickTimes + schedule로 구간 내 클릭만 등록.
       if (metronome) {
-        if (opts?.keepAlive) {
-          // keepAlive 녹음: 박 간격 연속 클릭 (빈 콘텐츠+카운트인 포함, 콘텐츠 끝 이후도 계속)
-          const beatDur = beatDurationSec(project.transport.tempo)
+        if (opts?.keepAlive || effectiveLoopEnabled) {
+          const beatDur = beatDurationSec(tempo)
           const beatsPerBar = (project.transport.timeSignature as [number, number])[0]
           let beatIndex = 0
           transport.scheduleRepeat(
@@ -120,9 +140,8 @@ export function createPlaybackEngine(
             0,
           )
         } else if (totalDurationSec > 0) {
-          // 유한 재생: 카운트인 포함 전체 구간 클릭 스케줄
           const clicks = computeClickTimes(
-            project.transport.tempo,
+            tempo,
             project.transport.timeSignature as [number, number],
             0,
             totalDurationSec,
@@ -136,9 +155,12 @@ export function createPlaybackEngine(
       }
 
       const endSec = totalDurationSec
-      if (opts?.keepAlive) {
-        // 녹음 모드: 빈 트랙(endSec===0)이어도 transport를 시작해 Stop 전까지 유지.
-        // 자동종료(scheduleOnce)/onEnded를 등록하지 않는다 — 사용자가 Stop할 때까지 녹음 지속.
+
+      // #fix1: effectiveLoopEnabled이면 loopStartSec offset으로 재생 시작
+      //        keepAlive이면 offset 없이 시작 (녹음 모드)
+      if (effectiveLoopEnabled) {
+        transport.start(undefined, loopStartSec)
+      } else if (opts?.keepAlive) {
         transport.start()
       } else if (endSec > 0) {
         transport.scheduleOnce(() => {

@@ -3,6 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // 살아있는 Tone 모킹: schedule/scheduleOnce가 콜백을 즉시 실행한다.
 const transport = {
   bpm: { value: 120 },
+  loop: false, // NEW
+  loopStart: 0, // NEW
+  loopEnd: 0, // NEW
+  setLoopPoints: vi.fn(), // NEW
   start: vi.fn(),
   stop: vi.fn(),
   cancel: vi.fn(),
@@ -349,5 +353,143 @@ describe('createPlaybackEngine.play — 메트로놈', () => {
     // schedule 1회(노트), scheduleOnce 1회(종료)
     expect(transport.schedule).toHaveBeenCalledTimes(1)
     expect(transport.scheduleOnce).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('createPlaybackEngine.play — 루프 모드', () => {
+  beforeEach(() => {
+    transport.loop = false
+    transport.loopStart = 0
+    transport.loopEnd = 0
+    transport.setLoopPoints.mockClear()
+    transport.start.mockClear()
+    transport.stop.mockClear()
+    transport.cancel.mockClear()
+    transport.schedule.mockClear()
+    transport.scheduleOnce.mockClear()
+    transport.scheduleRepeat.mockClear()
+  })
+
+  it('loopEnabled=true → transport.loop=true 및 setLoopPoints(startSec, endSec) 호출', async () => {
+    const t = createTrack('Piano')
+    let p = addTrack(createEmptyProject('S'), t)
+    p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
+
+    // ppq=480, tempo=120 → loopStartTicks=0 → 0s, loopEndTicks=1920 → 2.0s
+    await engine.play(p, undefined, undefined, {
+      loopEnabled: true,
+      loopStartTicks: 0,
+      loopEndTicks: 1920,
+    })
+
+    expect(transport.loop).toBe(true)
+    expect(transport.setLoopPoints).toHaveBeenCalledWith(expect.closeTo(0), expect.closeTo(2.0))
+  })
+
+  it('loopEnabled=true → scheduleOnce(자동종료) 미등록, transport.start는 호출됨', async () => {
+    const t = createTrack('Piano')
+    let p = addTrack(createEmptyProject('S'), t)
+    p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
+    const onEnded = vi.fn()
+
+    await engine.play(p, onEnded, undefined, {
+      loopEnabled: true,
+      loopStartTicks: 0,
+      loopEndTicks: 1920,
+    })
+
+    // 루프 모드는 자동종료 없이 무한 반복
+    expect(transport.scheduleOnce).not.toHaveBeenCalled()
+    expect(onEnded).not.toHaveBeenCalled()
+    expect(transport.start).toHaveBeenCalledTimes(1)
+  })
+
+  it('녹음 가드: keepAlive=true이면 loopEnabled=true여도 transport.loop=false', async () => {
+    const t = createTrack('Piano')
+    const p = addTrack(createEmptyProject('S'), t)
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
+
+    await engine.play(p, undefined, undefined, {
+      keepAlive: true,
+      loopEnabled: true,
+      loopStartTicks: 0,
+      loopEndTicks: 1920,
+    })
+
+    // 녹음 중에는 루프 비활성 — 녹음 타이밍 보호
+    expect(transport.loop).toBe(false)
+    expect(transport.setLoopPoints).not.toHaveBeenCalled()
+  })
+
+  it('loopEnabled=false(기본) → transport.loop=false, 기존 동작 불변', async () => {
+    const t = createTrack('Piano')
+    let p = addTrack(createEmptyProject('S'), t)
+    p = addNote(p, t.id, createNote({ pitch: 60, start: 0, duration: 480, velocity: 100 }))
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
+    const onEnded = vi.fn()
+
+    await engine.play(p, onEnded)
+
+    expect(transport.loop).toBe(false)
+    expect(transport.setLoopPoints).not.toHaveBeenCalled()
+    // 기존 경로: scheduleOnce로 자동종료
+    expect(transport.scheduleOnce).toHaveBeenCalledTimes(1)
+    expect(onEnded).toHaveBeenCalledTimes(1)
+  })
+
+  it('[fix1] loopEnabled=true + loopStartTicks=960(>0) → transport.start가 (undefined, loopStartSec)로 호출된다', async () => {
+    const t = createTrack('Piano')
+    const p = addTrack(createEmptyProject('S'), t)
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
+
+    // ppq=480, tempo=120: loopStartTicks=960 → loopStartSec = 960/480*(60/120) = 1.0s
+    await engine.play(p, undefined, undefined, {
+      loopEnabled: true,
+      loopStartTicks: 960,
+      loopEndTicks: 1920,
+    })
+
+    // loopStart>0 이면 transport.start(undefined, loopStartSec)로 offset 전달해야 한다
+    expect(transport.start).toHaveBeenCalledWith(undefined, expect.closeTo(1.0))
+  })
+
+  it('loopEnabled=true + metronome → scheduleRepeat(연속 클릭), schedule 클릭 없음', async () => {
+    const clickSpy = vi.fn()
+    const metronome: MetronomeHandle = { click: clickSpy, dispose: vi.fn() }
+    const t = createTrack('Piano')
+    const p = addTrack(createEmptyProject('S'), t)
+    const engine = createPlaybackEngine(() => ({
+      triggerAttackRelease: vi.fn(),
+      volume: { value: 0 },
+    }))
+
+    await engine.play(p, undefined, undefined, {
+      loopEnabled: true,
+      loopStartTicks: 0,
+      loopEndTicks: 1920,
+      metronome,
+    })
+
+    // 루프 모드 메트로놈 = keepAlive와 동일하게 scheduleRepeat 사용 (무한 반복)
+    expect(transport.scheduleRepeat).toHaveBeenCalledTimes(1)
+    // 개별 schedule로 클릭이 등록되지 않아야 함 (노트도 없으므로 schedule 0회)
+    expect(transport.schedule).not.toHaveBeenCalled()
   })
 })
