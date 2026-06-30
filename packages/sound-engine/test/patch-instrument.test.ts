@@ -88,9 +88,7 @@ const {
   MockPolySynth,
   mockPolyInstance,
   MockFilter,
-  mockFilterInstance,
   MockReverb,
-  mockReverbInstance,
   MockFeedbackDelay,
   mockDelayInstance,
 } = vi.hoisted(() => {

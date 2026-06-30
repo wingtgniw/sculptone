@@ -20,6 +20,19 @@ export default tseslint.config(
       ecmaVersion: 2022,
       sourceType: 'module',
     },
+    rules: {
+      // _ 접두사는 의도적 미사용으로 허용
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+      // Tone v15 등 외부 타이핑 한계로 불가피한 any는 경고로(차단하지 않음)
+      '@typescript-eslint/no-explicit-any': 'warn',
+      // 의도적 빈 catch(예: jsdom 미지원 API) 허용
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      // 신규/엄격 규칙 — 오탐 여지가 있어 경고로
+      'no-useless-assignment': 'warn',
+    },
   },
 
   // 웹: 브라우저 글로벌 + React Hooks/Refresh 규칙

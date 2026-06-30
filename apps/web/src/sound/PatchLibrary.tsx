@@ -71,7 +71,6 @@ export function PatchLibrary({ trackId, currentSound }: Props) {
 
   useEffect(() => {
     refresh()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleSave = async () => {

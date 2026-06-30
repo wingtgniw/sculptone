@@ -114,7 +114,6 @@ const {
   mockFilterInstance,
   MockReverb,
   MockFeedbackDelay,
-  mockDelayInstance,
   MockLFO,
   mockLFOInstance,
   MockGain,

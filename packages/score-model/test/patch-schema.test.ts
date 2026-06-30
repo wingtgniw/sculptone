@@ -150,7 +150,7 @@ describe('createDefaultPatch', () => {
 
 function makeProjectWithSound(sound: Sound) {
   const t = createTrack('Synth')
-  let p = addTrack(createEmptyProject('Test'), t)
+  const p = addTrack(createEmptyProject('Test'), t)
   return updateTrackSound(p, t.id, sound)
 }
 

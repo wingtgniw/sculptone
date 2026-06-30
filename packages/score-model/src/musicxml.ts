@@ -1,6 +1,6 @@
 import type { Project } from './schema'
 import { trackToNotation, fillRests, midiToOctave } from './notation'
-import type { NotationNote, NotationRest, NotationElement, DurationType } from './notation'
+import type { NotationNote, NotationRest, NotationElement } from './notation'
 
 // ── 내부 헬퍼 ──────────────────────────────────────────────────
 

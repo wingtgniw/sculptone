@@ -4,14 +4,7 @@ import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, it, expect } from 'vitest'
 import { ZodError } from 'zod'
-import {
-  savePatch,
-  listPatches,
-  loadPatch,
-  deletePatch,
-  type SavedPatch,
-  type PatchSummary,
-} from '../patch-storage'
+import { savePatch, listPatches, loadPatch, deletePatch } from '../patch-storage'
 import { getDB } from '../_db'
 // __resetDB는 storage.ts에서 re-export하므로 기존 storage.test.ts와 동일 경로
 import { saveProject, loadProject, __resetDB } from '../storage'

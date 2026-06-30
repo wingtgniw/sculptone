@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   LANE_HEIGHT,
-  PX_PER_BEAT,
-  PITCH_LOW,
   PITCH_HIGH,
   pxPerTick,
   tickToX,

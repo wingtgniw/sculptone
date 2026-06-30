@@ -102,7 +102,7 @@ describe('buildMultiSchedule', () => {
 
   it('여러 노트를 가진 트랙은 모두 포함', () => {
     const { p, ids } = makeProject()
-    let q = addNote(p, ids.t1, createNote({ pitch: 62, start: 480, duration: 240, velocity: 64 }))
+    const q = addNote(p, ids.t1, createNote({ pitch: 62, start: 480, duration: 240, velocity: 64 }))
     const items = buildMultiSchedule(q, [ids.t1])
     expect(items).toHaveLength(2)
     expect(items.every((x) => x.trackId === ids.t1)).toBe(true)
