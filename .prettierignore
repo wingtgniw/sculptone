@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+*.tsbuildinfo
+
+# 프론트 세션이 관리하는 문서/디자인 자산 — 포맷 대상에서 제외
+docs/
+documents/

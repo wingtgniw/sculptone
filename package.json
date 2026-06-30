@@ -11,6 +11,8 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "coverage": "pnpm -r coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "dev": "pnpm --filter @sculptone/web dev"
   },
   "devDependencies": {
