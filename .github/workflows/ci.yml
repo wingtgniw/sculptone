@@ -41,8 +41,18 @@ jobs:
       - name: Typecheck
         run: pnpm -r typecheck
 
-      - name: Test
-        run: pnpm -r test
+      # 커버리지 실행은 테스트 실행 + 임계값 게이트를 겸한다(이중 실행 방지)
+      - name: Test & coverage
+        run: pnpm -r coverage
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: '**/coverage/'
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Build
         run: pnpm -r build

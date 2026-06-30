@@ -10,9 +10,12 @@
     "test": "pnpm -r test",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "coverage": "pnpm -r coverage",
     "dev": "pnpm --filter @sculptone/web dev"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "prettier": "^3.9.1",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   }
