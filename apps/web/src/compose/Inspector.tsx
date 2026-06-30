@@ -9,18 +9,47 @@ function noteName(pitch: number): string {
 export function Inspector() {
   const project = useStore((s) => s.project)
   const trackId = useStore((s) => s.selectedTrackId)
-  const noteId = useStore((s) => s.selectedNoteId)
+  const noteId = useStore((s) => s.selectedNoteId) // compat 미러
+  const selectedNoteIds = useStore((s) => s.selectedNoteIds)
   const setProject = useStore((s) => s.setProject)
   const track = project.tracks.find((t) => t.id === trackId)
   const note = track?.notes.find((n) => n.id === noteId)
 
-  if (!note) {
+  const count = selectedNoteIds.length
+
+  // 0개 선택
+  if (count === 0) {
     return (
       <div style={{ padding: '14px 12px', color: 'var(--text-lo)', fontSize: 12 }}>
         노트를 선택하세요
       </div>
     )
   }
+
+  // 2개+ 선택: 간략 표시
+  if (count >= 2) {
+    return (
+      <div style={{ padding: '14px 12px' }}>
+        <p
+          style={{
+            fontSize: 11,
+            color: 'var(--text-lo)',
+            textTransform: 'uppercase',
+            letterSpacing: '.1em',
+            margin: '0 0 10px',
+          }}
+        >
+          Inspector
+        </p>
+        <div style={{ fontSize: 12, color: 'var(--text-mid)', lineHeight: 2.2 }}>
+          {count}개 노트 선택됨
+        </div>
+      </div>
+    )
+  }
+
+  // 1개 선택: 기존 단일 편집 UI (변경 없음)
+  if (!note) return null
   const row = { fontSize: 12, color: 'var(--text-mid)', lineHeight: 2.2 } as const
   const val = { float: 'right', color: 'var(--text-hi)' } as const
   return (
