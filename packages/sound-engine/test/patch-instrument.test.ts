@@ -113,6 +113,7 @@ const {
     connect: vi.fn(),
     toDestination: vi.fn(),
     dispose: vi.fn(),
+    ready: Promise.resolve() as Promise<unknown>,
   }
   const MockReverb = vi.fn().mockReturnValue(mockReverbInstance)
   const mockDelayInstance = {
@@ -177,5 +178,21 @@ describe('createInstrumentFromSound — 스모크 (Tone mock)', () => {
     inst.dispose()
     expect(mockPolyInstance.dispose).toHaveBeenCalled()
     expect(mockDelayInstance.dispose).toHaveBeenCalled()
+  })
+
+  // Fix A: reverb ready Promise 노출 테스트
+  it('reverb effect가 있으면 ready Promise를 노출한다', async () => {
+    const patch = makePatch({
+      effects: [{ type: 'reverb', wet: 0.5, decay: 2 }],
+    })
+    const inst = createInstrumentFromSound(patch)
+    expect(inst.ready).toBeInstanceOf(Promise)
+    await expect(inst.ready).resolves.toBeUndefined()
+  })
+
+  it('reverb effect가 없으면 ready가 undefined이다', () => {
+    const patch = makePatch()
+    const inst = createInstrumentFromSound(patch)
+    expect(inst.ready).toBeUndefined()
   })
 })

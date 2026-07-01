@@ -91,6 +91,8 @@ export interface PatchInstrument {
   triggerAttackRelease: (note: string, duration: number, time?: number, velocity?: number) => void
   volume: { value: number }
   dispose: () => void
+  /** 리버브 IR이 준비되면 resolve되는 프로미스. 리버브 없으면 undefined. */
+  ready?: Promise<void>
 }
 
 export type SoundInput = { kind: 'preset'; presetId: string } | ({ kind: 'patch' } & PatchInput)
@@ -172,6 +174,7 @@ export function createInstrumentFromSound(
 
   const nodes: Tone.ToneAudioNode[] = []
   let filterNode: Tone.Filter | null = null
+  const reverbReadies: Promise<void>[] = []
 
   // Filter
   if (cfg.filter) {
@@ -185,6 +188,8 @@ export function createInstrumentFromSound(
     if (fx.type === 'reverb') {
       const r = new Tone.Reverb(Math.max(fx.decay, 0.001))
       r.wet.value = fx.wet
+      // Tone v15: Reverb.ready는 IR 생성이 완료되면 resolve되는 Promise<Reverb>
+      reverbReadies.push((r as unknown as { ready: Promise<unknown> }).ready.then(() => {}))
       nodes.push(r)
     } else if (fx.type === 'delay') {
       const d = new Tone.FeedbackDelay(fx.time, fx.feedback)
@@ -258,5 +263,6 @@ export function createInstrumentFromSound(
       poly.dispose()
       for (const n of nodes) n.dispose()
     },
+    ready: reverbReadies.length > 0 ? Promise.all(reverbReadies).then(() => {}) : undefined,
   }
 }
