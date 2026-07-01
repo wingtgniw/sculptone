@@ -23,6 +23,7 @@ import { useClipboard } from '../compose/useClipboard'
 import { quantizeSelection } from '../compose/quantizeSelection'
 import { AuthButton } from '../cloud/AuthButton'
 import { useCloudSync } from '../cloud/useCloudSync'
+import { ShareButton } from '../ui/ShareButton'
 
 const TABS = [
   { id: 'compose', label: 'Compose' },
@@ -232,6 +233,7 @@ export function AppShell() {
           </div>
         )}
         <FileMenu />
+        <ShareButton />
         <MidiDeviceSelect
           devices={devices}
           selectedDeviceId={selectedDeviceId}
