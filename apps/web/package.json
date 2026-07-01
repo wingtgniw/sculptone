@@ -14,6 +14,7 @@
   "dependencies": {
     "@sculptone/score-model": "workspace:*",
     "@sculptone/sound-engine": "workspace:*",
+    "@supabase/supabase-js": "^2.108.2",
     "idb": "^8.0.3",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
