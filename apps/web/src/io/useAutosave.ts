@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
 import { saveProject } from './storage'
+import { pushProject } from '../cloud/sync'
 import type { Project } from '@sculptone/score-model'
 
 /**
@@ -28,13 +29,21 @@ export function useAutosave(delayMs = 800): void {
     // 프로젝트 전환(id 변경) 시 이전 프로젝트를 즉시 플러시한다.
     const prev = prevProjectRef.current
     if (prev.id !== project.id) {
-      void saveProject(prev).catch((err) => console.error('autosave flush failed', err))
+      void saveProject(prev)
+        .then(() => {
+          pushProject(prev)
+        })
+        .catch((err) => console.error('autosave flush failed', err))
     }
     prevProjectRef.current = project
 
     if (timerRef.current !== null) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {
-      saveProject(project).catch((err) => console.error('autosave failed', err))
+      saveProject(project)
+        .then(() => {
+          pushProject(project)
+        })
+        .catch((err) => console.error('autosave failed', err))
     }, delayMs)
 
     return () => {

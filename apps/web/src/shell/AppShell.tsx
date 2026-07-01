@@ -22,6 +22,7 @@ import { matchShortcut } from './shortcuts'
 import { useClipboard } from '../compose/useClipboard'
 import { quantizeSelection } from '../compose/quantizeSelection'
 import { AuthButton } from '../cloud/AuthButton'
+import { useCloudSync } from '../cloud/useCloudSync'
 
 const TABS = [
   { id: 'compose', label: 'Compose' },
@@ -63,6 +64,7 @@ const helpBtnStyle: CSSProperties = {
 }
 
 export function AppShell() {
+  useCloudSync()
   useAutosave()
 
   const activeMode = useStore((s) => s.activeMode)
