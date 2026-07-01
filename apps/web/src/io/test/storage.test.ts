@@ -3,13 +3,21 @@ import 'fake-indexeddb/auto'
 // 계획서 fallback: 테스트별 새 IDBFactory 인스턴스 → 연결 블록 없이 완전 격리
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, it, expect } from 'vitest'
-import { saveProject, loadProject, listProjects, deleteProject, __resetDB } from '../storage'
+import {
+  saveProject,
+  loadProject,
+  listProjects,
+  deleteProject,
+  saveProjectRaw,
+  __resetDB,
+} from '../storage'
 import {
   createEmptyProject,
   createTrack,
   createNote,
   addTrack,
   addNote,
+  type Project,
 } from '@sculptone/score-model'
 
 function makeProject(title = 'Test') {
@@ -93,5 +101,33 @@ describe('storage', () => {
     expect(loaded!.metadata.title).toBe('Updated')
     const list = await listProjects()
     expect(list).toHaveLength(1) // 중복 저장 없음
+  })
+})
+
+describe('saveProjectRaw', () => {
+  it('project.metadata.updatedAt을 재발급하지 않고 그대로 저장한다', async () => {
+    const project = createEmptyProject('Raw Test')
+    // 오래된 타임스탬프를 수동 설정
+    const oldTimestamp = '2026-01-01T00:00:00.000Z'
+    const projectWithOldTs: Project = {
+      ...project,
+      metadata: { ...project.metadata, updatedAt: oldTimestamp },
+    }
+    await saveProjectRaw(projectWithOldTs)
+    const summaries = await listProjects()
+    const saved = summaries.find((s) => s.id === project.id)
+    expect(saved).toBeDefined()
+    // 재발급 없이 원래 타임스탬프가 보존되어야 함
+    expect(saved!.updatedAt).toBe(oldTimestamp)
+  })
+
+  it('saveProjectRaw로 저장한 프로젝트를 loadProject로 복원하면 원본과 일치한다', async () => {
+    const project = createEmptyProject('Load Raw Test')
+    const ts = '2025-12-31T23:59:59.999Z'
+    const stamped: Project = { ...project, metadata: { ...project.metadata, updatedAt: ts } }
+    await saveProjectRaw(stamped)
+    const loaded = await loadProject(stamped.id)
+    expect(loaded).toBeDefined()
+    expect(loaded!.metadata.updatedAt).toBe(ts)
   })
 })

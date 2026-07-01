@@ -53,3 +53,20 @@ export async function deleteProject(id: string): Promise<void> {
   const db: DB = await getDB()
   await db.delete(STORE_NAME, id)
 }
+
+/**
+ * Cloud sync 전용: project.metadata.updatedAt을 재발급하지 않고 그대로 보존하여 저장.
+ * 클라우드에서 다운로드한 프로젝트를 로컬에 반영할 때 사용한다.
+ * 이 함수로 저장한 이후 reconcile 시 타임스탬프가 클라우드와 동일 → 재업로드 방지.
+ *
+ * 일반 사용자 편집 저장에는 saveProject를 사용할 것 (updatedAt 재발급).
+ */
+export async function saveProjectRaw(project: Project): Promise<void> {
+  const db: DB = await getDB()
+  await db.put(STORE_NAME, {
+    id: project.id,
+    title: project.metadata.title,
+    updatedAt: project.metadata.updatedAt, // 재발급 없이 원본 타임스탬프 보존
+    data: serializeProject(project), // project.metadata.updatedAt 포함된 채 직렬화
+  })
+}
