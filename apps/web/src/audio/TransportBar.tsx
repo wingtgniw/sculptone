@@ -5,9 +5,11 @@ import { Badge } from '../ui/Badge'
 interface Props {
   onPlay: () => void
   onStop: () => void
+  /** false 시 Record 버튼과 REC 배지를 렌더하지 않음. 기본값: true. */
+  showRecord?: boolean
 }
 
-export function TransportBar({ onPlay, onStop }: Props) {
+export function TransportBar({ onPlay, onStop, showRecord = true }: Props) {
   const isPlaying = useStore((s) => s.isPlaying)
   const isRecording = useStore((s) => s.isRecording)
   const metronomeEnabled = useStore((s) => s.metronomeEnabled)
@@ -63,19 +65,21 @@ export function TransportBar({ onPlay, onStop }: Props) {
         height: '100%',
       }}
     >
-      {/* 녹음 버튼 */}
-      <button
-        aria-label="녹음"
-        aria-pressed={isRecording}
-        onClick={handleRecord}
-        style={{
-          ...tbtn,
-          background: isRecording ? 'var(--record)' : 'var(--bg-elevated)',
-          color: isRecording ? '#fff' : 'var(--text-hi)',
-        }}
-      >
-        ⏺
-      </button>
+      {/* 녹음 버튼 — showRecord=false(read-only 뷰어)이면 렌더 안 함 */}
+      {showRecord && (
+        <button
+          aria-label="녹음"
+          aria-pressed={isRecording}
+          onClick={handleRecord}
+          style={{
+            ...tbtn,
+            background: isRecording ? 'var(--record)' : 'var(--bg-elevated)',
+            color: isRecording ? '#fff' : 'var(--text-hi)',
+          }}
+        >
+          ⏺
+        </button>
+      )}
 
       {/* 재생 버튼 */}
       <button
@@ -153,7 +157,7 @@ export function TransportBar({ onPlay, onStop }: Props) {
         {tempo} BPM {isPlaying ? '· ▶' : ''}
       </span>
 
-      {isRecording && <Badge tone="rec">REC</Badge>}
+      {showRecord && isRecording && <Badge tone="rec">REC</Badge>}
     </div>
   )
 }
