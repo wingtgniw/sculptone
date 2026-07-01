@@ -21,6 +21,7 @@ import { ShortcutsHelp } from './ShortcutsHelp'
 import { matchShortcut } from './shortcuts'
 import { useClipboard } from '../compose/useClipboard'
 import { quantizeSelection } from '../compose/quantizeSelection'
+import { AuthButton } from '../cloud/AuthButton'
 
 const TABS = [
   { id: 'compose', label: 'Compose' },
@@ -236,6 +237,9 @@ export function AppShell() {
           isSupported={isSupported}
           accessError={accessError}
         />
+
+        {/* 클라우드 인증 — Supabase 미설정 시 null 렌더 */}
+        <AuthButton />
 
         {/* 단축키 도움말 버튼 (?) */}
         <button
