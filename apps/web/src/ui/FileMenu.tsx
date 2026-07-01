@@ -10,6 +10,7 @@ import {
   projectToMusicXML,
 } from '@sculptone/score-model'
 import { downloadBytes, downloadText, readFileAsArrayBuffer } from '../io/files'
+import { downloadDataset } from '../dataset/bundle'
 
 const btnStyle: CSSProperties = {
   font: 'inherit',
@@ -29,6 +30,21 @@ export function FileMenu() {
   const replaceProject = useStore((s) => s.replaceProject)
   const fileInput = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const handleExportDataset = async () => {
+    setIsExporting(true)
+    setExportError(null)
+    try {
+      await downloadDataset(project)
+    } catch (err) {
+      console.error('[FileMenu] Dataset export failed:', err)
+      setExportError('데이터셋 내보내기 실패')
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const handleNew = () => {
     replaceProject(addTrack(createEmptyProject('Untitled Project'), createTrack('Piano')))
@@ -84,6 +100,14 @@ export function FileMenu() {
       <button style={btnStyle} onClick={handleExportMusicXML}>
         Export MusicXML
       </button>
+      <button style={btnStyle} onClick={handleExportDataset} disabled={isExporting}>
+        {isExporting ? 'Exporting...' : 'Export Training Data'}
+      </button>
+      {exportError && (
+        <span style={{ fontSize: 11, color: 'var(--record)', whiteSpace: 'nowrap' }}>
+          {exportError}
+        </span>
+      )}
       <button style={btnStyle} onClick={() => fileInput.current?.click()}>
         Import MIDI
       </button>
